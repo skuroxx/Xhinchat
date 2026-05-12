@@ -3,94 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ada | The Premier Discord Utility</title>
+    <title>ADA | BETA ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #080808; 
-            color: #ffffff;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --maroon: #800000;
+            --dark-maroon: #4a0000;
+            --obsidian: #050505;
         }
-        .maroon-glow {
-            box-shadow: 0 0 40px -10px rgba(128, 0, 0, 0.5);
+
+        body {
+            background-color: var(--obsidian);
+            color: white;
+            font-family: 'Inter', sans-serif;
         }
-        .text-maroon { color: #800000; }
-        .bg-maroon { background-color: #800000; }
-        .hover-bg-maroon:hover { background-color: #660000; }
-        
-        /* Smooth radial background */
-        .bg-mesh {
-            background: radial-gradient(circle at 0% 0%, #1a0000 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, #121212 0%, transparent 50%);
+
+        .impact-font {
+            font-family: 'Impact', 'Arial Narrow Bold', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(128, 0, 0, 0.2);
+
+        .maroon-gradient {
+            background: linear-gradient(135deg, var(--maroon), var(--dark-maroon));
+        }
+
+        .beta-warning {
+            border-left: 4px solid var(--maroon);
+            background: rgba(128, 0, 0, 0.1);
+        }
+
+        .command-card {
+            background: #0c0c0c;
+            border: 1px solid #1a1a1a;
+            transition: all 0.3s ease;
+        }
+
+        .command-card:hover {
+            border-color: var(--maroon);
+            transform: translateY(-2px);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 15px rgba(128, 0, 0, 0.6);
         }
     </style>
 </head>
-<body class="bg-mesh min-h-screen flex flex-col">
+<body class="selection:bg-red-900">
 
-    <!-- Header -->
-    <nav class="p-8">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-maroon rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-red-900/20">A</div>
-                <span class="text-2xl font-800 tracking-tighter uppercase">Ada</span>
-            </div>
-            <div class="flex space-x-6">
-                <a href="https://discord.gg/your-support-link" class="text-sm font-semibold text-gray-400 hover:text-white transition">Support</a>
-                <a href="#" class="text-sm font-semibold text-gray-400 hover:text-white transition">Docs</a>
-            </div>
+    <div class="beta-warning p-3 text-center text-xs font-bold tracking-widest uppercase text-gray-400">
+        ⚠️ Warning: <span class="text-white">Ada is currently in active Beta testing.</span> Expect frequent updates and experimental features.
+    </div>
+
+    <header class="py-20 px-6 text-center">
+        <h1 class="impact-font text-7xl md:text-9xl mb-4 glow-text">ADA</h1>
+        <p class="text-maroon font-bold tracking-[0.5em] uppercase text-sm mb-8">System v3.3.0 // Advanced Automation</p>
+        
+        <div class="flex justify-center gap-4">
+            <a href="YOUR_INVITE_LINK" class="maroon-gradient impact-font px-10 py-4 text-xl hover:scale-105 transition-transform">
+                Invite Bot
+            </a>
+            <a href="#docs" class="border-2 border-white impact-font px-10 py-4 text-xl hover:bg-white hover:text-black transition-all">
+                Documentation
+            </a>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Hero -->
-    <main class="flex-grow flex items-center justify-center px-6">
-        <div class="max-w-4xl w-full">
-            <div class="text-center mb-16">
-                <h1 class="text-6xl md:text-8xl font-800 mb-6 tracking-tight">
-                    Powering <span class="text-maroon underline decoration-4 underline-offset-8">Elegance</span><br>in Automation.
-                </h1>
-                <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-12">
-                    Ada provides high-performance moderation, sophisticated logging, and custom commands tailored for professional communities.
-                </p>
-
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <!-- UPDATE THE LINK BELOW WITH YOUR BOT CLIENT ID -->
-                    <a href="https://discord.com/api/oauth2/authorize?client_id=1484845052063780964&permissions=8&scope=bot%20applications.commands" 
-                       class="maroon-glow w-full sm:w-auto bg-maroon hover-bg-maroon text-white px-12 py-5 rounded-2xl font-bold text-lg transition-all transform hover:-translate-y-1 active:scale-95">
-                        Add Ada to Server
-                    </a>
+    <section id="docs" class="max-w-6xl mx-auto px-6 py-20">
+        <h2 class="impact-font text-4xl mb-12 border-b-2 border-maroon inline-block">Command Registry</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <div class="command-card p-6 rounded-sm">
+                <div class="flex items-center mb-4">
+                    <span class="text-maroon text-2xl mr-3">🎵</span>
+                    <h3 class="impact-font text-2xl">Music</h3>
                 </div>
+                <p class="text-gray-500 text-sm mb-4">High-fidelity audio streaming with live progress bars.</p>
+                <code class="text-xs text-red-200 leading-relaxed">
+                    play, pause, resume, skip, stop, queue, np, volume, seek, loop, shuffle, remove, clear, lyrics
+                </code>
             </div>
 
-            <!-- Real Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card p-8 rounded-3xl text-center">
-                    <div class="text-maroon text-4xl font-800 mb-2">1,482</div>
-                    <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">Servers Managed</div>
+            <div class="command-card p-6 rounded-sm">
+                <div class="flex items-center mb-4">
+                    <span class="text-maroon text-2xl mr-3">🔧</span>
+                    <h3 class="impact-font text-2xl">Utility</h3>
                 </div>
-                <div class="glass-card p-8 rounded-3xl text-center">
-                    <div class="text-maroon text-4xl font-800 mb-2">842k</div>
-                    <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">Users Protected</div>
-                </div>
-                <div class="glass-card p-8 rounded-3xl text-center">
-                    <div class="text-maroon text-4xl font-800 mb-2">99.98%</div>
-                    <div class="text-gray-500 text-xs uppercase tracking-widest font-bold">System Uptime</div>
-                </div>
+                <p class="text-gray-500 text-sm mb-4">Essential tools for server information and management.</p>
+                <code class="text-xs text-red-200">
+                    ping, serverinfo, userinfo, avatar, remind, calc, snipe, roleinfo, inviteinfo, poll, rate, say, embed
+                </code>
             </div>
+
+            <div class="command-card p-6 rounded-sm">
+                <div class="flex items-center mb-4">
+                    <span class="text-maroon text-2xl mr-3">🛡️</span>
+                    <h3 class="impact-font text-2xl">Moderation</h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">Industrial strength protection for your community.</p>
+                <code class="text-xs text-red-200">
+                    ban, kick, mute, unmute, purge, warn, unwarn, warnings
+                </code>
+            </div>
+
+            <div class="command-card p-6 rounded-sm">
+                <div class="flex items-center mb-4">
+                    <span class="text-maroon text-2xl mr-3">⚙️</span>
+                    <h3 class="impact-font text-2xl">Core Config</h3>
+                </div>
+                <p class="text-gray-500 text-sm mb-4">Customize Ada's behavior per-guild.</p>
+                <code class="text-xs text-red-200">
+                    setprefix, prefix
+                </code>
+            </div>
+
         </div>
-    </main>
+    </section>
 
-    <!-- Footer -->
-    <footer class="p-10 text-center border-t border-white/5">
-        <p class="text-gray-600 text-sm tracking-wide">
-            &copy; 2026 <strong>Ada Bot</strong>. Built for high-traffic environments.
-        </p>
+    <footer class="py-10 text-center border-t border-white/5 opacity-50 text-xs tracking-widest">
+        &copy; 2026 ADA MULTIPROCESSOR // DEVELOPED FOR THE FUTURE
     </footer>
 
 </body>
