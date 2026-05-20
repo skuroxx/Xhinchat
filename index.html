@@ -44,7 +44,7 @@
                     <i class="fa-solid fa-user-group text-cyan-400" id="theme-icon"></i> Xhinchat
                 </h2>
                 <p class="text-xs text-amber-400 mt-1 font-medium flex items-center gap-1" id="status">
-                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting connection...</span>
+                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting setup...</span>
                 </p>
             </div>
             
@@ -68,39 +68,19 @@
             </div>
         </div>
 
-        <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
-            <div class="flex flex-col sm:flex-row gap-3" id="selection-row">
-                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-satellite-dish"></i> Host room
+        <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4 shadow-inner" id="setup-panel">
+            <div id="lobby-view" class="flex flex-col gap-3 text-center">
+                <p class="text-xs text-gray-400">Generate a secure room URL link or open an invitation link from a friend.</p>
+                <button id="host-btn" onclick="initializeHostWorkflow()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-share-nodes"></i> Create Secure Invitation Link
                 </button>
-                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i> Enter token
-                </button>
-            </div>
-            
-            <div id="host-flow" class="hidden flex flex-col gap-3">
-                <div class="bg-darkBg p-3 rounded-lg border border-gray-800 relative">
-                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Invitation Token (Send this to your friend)</label>
-                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10" placeholder="Generating setup data..."></textarea>
-                    <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 block mb-1">Paste friend's response token below:</label>
-                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste response token here..."></textarea>
-                </div>
-                <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Connect Chat</button>
             </div>
 
-            <div id="joiner-flow" class="hidden flex flex-col gap-3">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 block mb-1">Paste the Host's Invitation Token:</label>
-                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste token here..."></textarea>
-                </div>
-                <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Response Token</button>
-                <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
-                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Response Token (Send this back to Host)</label>
-                    <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10"></textarea>
-                    <button onclick="copyToken('generated-response-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+            <div id="link-sharing-view" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative flex flex-col gap-2">
+                <label id="share-label" class="text-xs font-bold text-cyan-400 block">Copy and send this private short link to your friend:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="share-url-input" readonly class="w-full bg-inputBg border border-gray-800 text-xs font-mono text-gray-300 rounded-lg px-3 py-2 focus:outline-none" value="Generating link...">
+                    <button id="copy-url-btn" onclick="copyShareURL()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 rounded-lg text-sm text-white transition"><i class="fa-regular fa-copy"></i></button>
                 </div>
             </div>
         </div>
@@ -115,7 +95,7 @@
             <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[340px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Exchange tokens above to connect.
+                    Disconnected. Generate or click an invitation link to start.
                 </div>
             </div>
             <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2 z-10">
@@ -152,9 +132,13 @@
         let isUserScrolledUp = false;
         let internalLogMemory = [];
         let isTunnelOpen = false;
+        let signalingInterval = null;
         
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; 
+        
+        // Public, free, zero-signup key-value endpoint for handling token handshakes anonymously
+        const SIGNAL_API_BASE = "https://keyvalue.xyz/v1";
 
         const primaryColorMap = {
             cyan: { main: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600' },
@@ -163,6 +147,98 @@
             rose: { main: 'bg-rose-500', hover: 'hover:bg-rose-600', text: 'text-rose-400', border: 'focus:border-rose-400', msg: 'bg-rose-600' }
         };
 
+        // --- AUTOMATED SIGNALING WORKFLOWS ---
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomCode = urlParams.get('room');
+            if(roomCode) {
+                // If loaded via an invitation URL link, execute automated joiner setup sequence
+                document.getElementById('username-input').value = "User_B";
+                initializeJoinerWorkflow(roomCode);
+            }
+        };
+
+        async function initializeHostWorkflow() {
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('link-sharing-view').classList.remove('hidden');
+            document.getElementById('status').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Creating link...`;
+
+            // Create a randomized token storage key slot
+            const hostRoomToken = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+            const cleanInvitationURL = `${window.location.origin}${window.location.pathname}?room=${hostRoomToken}`;
+            document.getElementById('share-url-input').value = cleanInvitationURL;
+
+            localConnection = new RTCPeerConnection(peerConfiguration);
+            dataChannel = localConnection.createDataChannel("chatChannel");
+            setupDataChannelEvents();
+            setupConnectionMonitoring();
+
+            localConnection.onicecandidate = async (e) => {
+                if (!e.candidate) {
+                    const hostOfferToken = btoa(JSON.stringify(localConnection.localDescription));
+                    
+                    // Upload Host Offer token to public anonymous vault sync space
+                    await fetch(`${SIGNAL_API_BASE}/${hostRoomToken}-offer`, {
+                        method: 'POST',
+                        body: hostOfferToken
+                    });
+
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Invitation link active! Send it to your friend.`;
+                    
+                    // Poll the database to see when the friend uploads their matching response block
+                    signalingInterval = setInterval(async () => {
+                        const res = await fetch(`${SIGNAL_API_BASE}/${hostRoomToken}-answer`);
+                        if(res.status === 200) {
+                            clearInterval(signalingInterval);
+                            const answerTokenRaw = await res.text();
+                            await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(answerTokenRaw))));
+                        }
+                    }, 3000);
+                }
+            };
+
+            await localConnection.setLocalDescription(await localConnection.createOffer());
+        }
+
+        async function initializeJoinerWorkflow(roomCode) {
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('link-sharing-view').classList.remove('hidden');
+            document.getElementById('share-label').innerText = "Connecting to Host room link channel...";
+            document.getElementById('share-url-input').value = "Connecting P2P pipe...";
+            document.getElementById('status').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Connecting to peer link...`;
+
+            // Fetch Host's initial offer key
+            let offerRes = await fetch(`${SIGNAL_API_BASE}/${roomCode}-offer`);
+            if(offerRes.status !== 200) {
+                alert("This chat invitation link has expired or is invalid!");
+                return resetTerminalState();
+            }
+
+            const hostOfferTokenRaw = await offerRes.text();
+
+            localConnection = new RTCPeerConnection(peerConfiguration);
+            setupConnectionMonitoring();
+            
+            localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
+            
+            localConnection.onicecandidate = async (e) => {
+                if (!e.candidate) {
+                    const joinerAnswerToken = btoa(JSON.stringify(localConnection.localDescription));
+                    
+                    // Post response back down into the anonymous cloud channel segment
+                    await fetch(`${SIGNAL_API_BASE}/${roomCode}-answer`, {
+                        method: 'POST',
+                        body: joinerAnswerToken
+                    });
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1 text-amber-400"></i> Synchronizing security encryption handshake...`;
+                }
+            };
+
+            await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(hostOfferTokenRaw))));
+            await localConnection.setLocalDescription(await localConnection.createAnswer());
+        }
+
+        // --- CORE APPLICATION ROUTINES ---
         function changeTheme() {
             const select = document.getElementById('theme-select');
             const newTheme = select.value;
@@ -201,71 +277,6 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
-        function lockSetupButtons() {
-            document.getElementById('host-btn').disabled = true;
-            document.getElementById('join-btn').disabled = true;
-        }
-
-        // --- P2P CONNECTION SETUPS ---
-        async function startAsHost() {
-            lockSetupButtons();
-            document.getElementById('host-flow').classList.remove('hidden');
-            
-            localConnection = new RTCPeerConnection(peerConfiguration);
-            dataChannel = localConnection.createDataChannel("chatChannel");
-            setupDataChannelEvents();
-            setupConnectionMonitoring();
-
-            localConnection.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token created! Send it to your friend.`;
-                }
-            };
-            await localConnection.setLocalDescription(await localConnection.createOffer());
-        }
-
-        async function connectHost() {
-            const raw = document.getElementById('friend-response-token').value.trim();
-            if(!raw) return alert("Please copy your friend's response token first!");
-            try { 
-                document.getElementById('host-connect-btn').disabled = true;
-                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); 
-            } catch(e) { 
-                alert("Invalid configuration token passed."); 
-                document.getElementById('host-connect-btn').disabled = false;
-            }
-        }
-
-        function startAsJoiner() {
-            lockSetupButtons();
-            document.getElementById('joiner-flow').classList.remove('hidden');
-        }
-
-        async function generateJoinerResponse() {
-            const raw = document.getElementById('host-token-input').value.trim();
-            if(!raw) return alert("Please copy host's deployment token string!");
-            try {
-                document.getElementById('joiner-generate-btn').disabled = true;
-                localConnection = new RTCPeerConnection(peerConfiguration);
-                setupConnectionMonitoring();
-                
-                localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
-                localConnection.onicecandidate = (e) => {
-                    if (!e.candidate) {
-                        document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                        document.getElementById('joiner-response-box').classList.remove('hidden');
-                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response compiled! Send it back to host.`;
-                    }
-                };
-                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
-                await localConnection.setLocalDescription(await localConnection.createAnswer());
-            } catch(e) { 
-                alert("Corrupted verification keys."); 
-                document.getElementById('joiner-generate-btn').disabled = false;
-            }
-        }
-
         function setupConnectionMonitoring() {
             localConnection.onconnectionstatechange = () => {
                 if(localConnection.connectionState === "disconnected" || 
@@ -279,6 +290,7 @@
         function handlePeerDisconnectEvent() {
             if(!isTunnelOpen) return;
             isTunnelOpen = false;
+            clearInterval(signalingInterval);
             
             document.getElementById('status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> User disconnected`;
             document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
@@ -286,7 +298,7 @@
             const box = document.getElementById('chat-box');
             const alertDiv = document.createElement('div');
             alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-500 bg-rose-950/30 border border-rose-900/50 py-2 rounded-xl px-4";
-            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected from session channel.`;
+            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected.`;
             box.appendChild(alertDiv);
             snapToBottom();
 
@@ -296,16 +308,16 @@
             document.getElementById('clip-btn').disabled = true;
         }
 
-        // --- PIPELINE TRAFFIC HANDLERS ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
                 isTunnelOpen = true;
+                clearInterval(signalingInterval);
                 const myAlias = document.getElementById('username-input').value.trim() || 'User_A';
                 
                 dataChannel.send(JSON.stringify({ type: 'handshake-identity', sender: myAlias }));
 
                 document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
-                document.getElementById('status').className= "text-xs text-emerald-400 font-bold mt-1";
+                document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('utility-bar').classList.remove('hidden');
                 
@@ -318,12 +330,10 @@
 
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
-                
                 if(p.type === 'handshake-identity') {
                     document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
                     return;
                 }
-
                 playPing();
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
@@ -339,7 +349,6 @@
             dataChannel.onclose = () => { handlePeerDisconnectEvent(); };
         }
 
-        // --- PACKET SEND TRANSLATION SYSTEMS ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
@@ -376,37 +385,28 @@
         }
 
         function resetTerminalState() {
+            clearInterval(signalingInterval);
             if(dataChannel) { dataChannel.close(); dataChannel = null; }
             if(localConnection) { localConnection.close(); localConnection = null; }
 
             isTunnelOpen = false;
             internalLogMemory = [];
+            window.history.pushState({}, '', window.location.pathname); // Strips query parameters from URL clean
 
             document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
             document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
             
             document.getElementById('setup-panel').classList.remove('hidden');
-            document.getElementById('selection-row').classList.remove('hidden');
-            document.getElementById('host-flow').classList.add('hidden');
-            document.getElementById('joiner-flow').classList.add('hidden');
-            document.getElementById('joiner-response-box').classList.add('hidden');
+            document.getElementById('lobby-view').classList.remove('hidden');
+            document.getElementById('link-sharing-view').classList.add('hidden');
             document.getElementById('utility-bar').classList.add('hidden');
-
-            document.getElementById('host-btn').disabled = false;
-            document.getElementById('join-btn').disabled = false;
-            document.getElementById('host-connect-btn').disabled = false;
-            document.getElementById('joiner-generate-btn').disabled = false;
-
-            document.getElementById('generated-token').value = "";
-            document.getElementById('friend-response-token').value = "";
-            document.getElementById('host-token-input').value = "";
-            document.getElementById('generated-response-token').value = "";
+            document.getElementById('share-label').innerText = "Copy and send this private short link to your friend:";
 
             const box = document.getElementById('chat-box');
             box.innerHTML = `
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Exchange tokens above to connect.
+                    Disconnected. Generate or click an invitation link to start.
                 </div>`;
 
             document.getElementById('msg-input').disabled = true;
@@ -415,7 +415,7 @@
             document.getElementById('clip-btn').disabled = true;
         }
 
-        // --- UI DRAW LAYOUT RENDERERS ---
+        // --- OUTPUT VIEW RENDERS ---
         function displayMessage(text, type, user, time) {
             const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
@@ -439,7 +439,7 @@
             box.appendChild(div);
         }
 
-        // --- AUTOMATED FILE CRYPTO ENGINE LAYER ---
+        // --- ENCRYPTION FILE BACKUPS ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No history logged yet!");
             const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
@@ -473,7 +473,12 @@
             reader.readAsText(fileInput);
         }
 
-        function copyToken(id) { navigator.clipboard.writeText(document.getElementById(id).value); alert("Token copied."); }
+        function copyShareURL() {
+            const input = document.getElementById('share-url-input');
+            navigator.clipboard.writeText(input.value);
+            alert("Invitation room link copied to clipboard!");
+        }
+        
         document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
