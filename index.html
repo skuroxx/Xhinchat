@@ -19,18 +19,20 @@
         }
     </script>
 </head>
-<body class="bg-darkBg text-gray-200 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none">
+<body class="bg-darkBg text-gray-200 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none font-sans">
 
     <script>
         function playPing() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator(); const gain = ctx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
-            gain.gain.setValueAtTime(0.08, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.start(); osc.stop(ctx.currentTime + 0.3);
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
         }
     </script>
 
@@ -41,32 +43,37 @@
                 <h2 class="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
                     <i class="fa-solid fa-user-group text-cyan-400" id="theme-icon"></i> Xhinchat
                 </h2>
-                <p class="text-xs text-amber-400 mt-1 font-medium" id="status"><i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> Awaiting connection...</p>
+                <p class="text-xs text-amber-400 mt-1 font-medium flex items-center gap-1" id="status">
+                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting connection...</span>
+                </p>
             </div>
             
             <div class="flex items-center gap-3">
+                <button onclick="resetTerminalState()" class="bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5" title="Reset Connection Status">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Reset Terminal
+                </button>
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Your Alias</label>
-                    <input type="text" id="username-input" value="User_A" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
+                    <input type="text" id="username-input" value="User_A" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-24 font-semibold">
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Theme</label>
-                    <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 cursor-pointer font-medium">
-                        <option value="cyan">Cyan</option>
-                        <option value="emerald">Emerald</option>
-                        <option value="purple">Pulse</option>
-                        <option value="rose">Rose</option>
+                    <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-400 cursor-pointer font-medium">
+                        <option value="cyan">Cyber Cyan</option>
+                        <option value="emerald">Emerald Moss</option>
+                        <option value="purple">Neon Pulse</option>
+                        <option value="rose">Velvet Rose</option>
                     </select>
                 </div>
             </div>
         </div>
 
         <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
-            <div class="flex flex-col sm:flex-row gap-3">
-                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-30">
+            <div class="flex flex-col sm:flex-row gap-3" id="selection-row">
+                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-satellite-dish"></i> Host room
                 </button>
-                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-30">
+                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-key"></i> Enter token
                 </button>
             </div>
@@ -81,7 +88,7 @@
                     <label class="text-xs font-bold text-gray-400 block mb-1">Paste friend's response token below:</label>
                     <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste response token here..."></textarea>
                 </div>
-                <button onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Connect Chat</button>
+                <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Connect Chat</button>
             </div>
 
             <div id="joiner-flow" class="hidden flex flex-col gap-3">
@@ -89,7 +96,7 @@
                     <label class="text-xs font-bold text-gray-400 block mb-1">Paste the Host's Invitation Token:</label>
                     <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste token here..."></textarea>
                 </div>
-                <button onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Response Token</button>
+                <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Response Token</button>
                 <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
                     <label class="text-xs font-bold text-cyan-400 block mb-1">Your Response Token (Send this back to Host)</label>
                     <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10"></textarea>
@@ -98,38 +105,40 @@
             </div>
         </div>
 
-        <div id="utility-bar" class="hidden flex items-center justify-end bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl">
+        <div id="utility-bar" class="hidden flex items-center justify-end bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl shadow-inner">
             <button onclick="exportEncryptedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Chat Log
             </button>
         </div>
 
         <div class="relative w-full">
-            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[320px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
+            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[340px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
                     Disconnected. Exchange tokens above to connect.
                 </div>
             </div>
-            <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2">
-                <i class="fa-solid fa-arrow-down规范 animate-bounce"></i> New message below
+            <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2 z-10">
+                <i class="fa-solid fa-arrow-down animate-bounce"></i> New message below
             </button>
         </div>
         
-        <div class="flex gap-2 items-center">
+        <div class="flex gap-2 items-center w-full">
             <input type="file" id="file-uploader" class="hidden" onchange="processFileUpload()">
-            <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center">
+            <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-paperclip text-sm"></i>
             </button>
             
-            <button id="mic-btn" onmousedown="startVoiceRecord(event)" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" ontouchstart="startVoiceRecord(event)" ontouchend="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 px-4 py-3.5 rounded-xl transition flex items-center justify-center gap-2 select-none font-bold text-xs whitespace-nowrap" title="Hold to Speak">
-                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i> <span id="mic-text">Press to Speak</span>
+            <button id="mic-btn" onmousedown="startVoiceRecord(event)" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" ontouchstart="startVoiceRecord(event)" ontouchend="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 px-3.5 py-3.5 rounded-xl transition flex items-center justify-center gap-2 select-none font-bold text-xs whitespace-nowrap shrink-0">
+                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i> <span id="mic-text" class="hidden sm:inline">Press to Speak</span>
             </button>
 
-            <input type="text" id="msg-input" placeholder="Disconnected..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
-            <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition">
-                <i class="fa-solid fa-paper-plane text-sm"></i>
-            </button>
+            <div class="flex-1 relative min-w-0 flex gap-2">
+                <input type="text" id="msg-input" placeholder="Disconnected..." disabled class="w-full bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50 min-w-0">
+                <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition shrink-0">
+                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                </button>
+            </div>
         </div>
 
         <div class="border-t border-gray-800 pt-4 mt-1 flex flex-col gap-2">
@@ -142,13 +151,16 @@
     </div>
 
     <script>
-        let localConnection, dataChannel;
+        let localConnection = null, dataChannel = null;
+        let activeAudioStream = null;
         let currentThemeColor = 'cyan';
         let isUserScrolledUp = false;
         let internalLogMemory = [];
-        let mediaRecorder, audioChunks = [];
+        let mediaRecorder = null, audioChunks = [];
+        let isTunnelOpen = false;
+        
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; // Internal key signature matching automation
+        const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; 
 
         const primaryColorMap = {
             cyan: { main: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600' },
@@ -167,7 +179,7 @@
                 el.classList.replace(oldConf.main, newConf.main);
                 if (el.classList.contains('hover:' + oldConf.main.split('-')[1])) el.classList.replace(oldConf.hover, newConf.hover);
             });
-            document.getElementById('theme-icon').classList.replace(oldConf.text, newConf.text);
+            document.getElementById('theme-icon').className = `fa-solid fa-user-group ${newConf.text}`;
             document.getElementById('msg-input').classList.replace(oldConf.border, newConf.border);
             document.getElementById('unread-badge').classList.replace(oldConf.main, newConf.main);
             document.querySelectorAll('.sent-bubble').forEach(b => b.classList.replace(oldConf.msg, newConf.msg));
@@ -195,18 +207,64 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
-        function lockSetupButtons() {
-            document.getElementById('host-btn').disabled = true;
-            document.getElementById('join-btn').disabled = true;
+        function resetTerminalState() {
+            // Explicitly kill active stream references 
+            if(activeAudioStream) {
+                activeAudioStream.getTracks().forEach(track => track.stop());
+                activeAudioStream = null;
+            }
+            if(dataChannel) { dataChannel.close(); dataChannel = null; }
+            if(localConnection) { localConnection.close(); localConnection = null; }
+
+            isTunnelOpen = false;
+            internalLogMemory = [];
+
+            // UI Refresh Back to Default State
+            document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
+            document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
+            
+            document.getElementById('setup-panel').classList.remove('hidden');
+            document.getElementById('selection-row').classList.remove('hidden');
+            document.getElementById('host-flow').classList.add('hidden');
+            document.getElementById('joiner-flow').classList.add('hidden');
+            document.getElementById('joiner-response-box').classList.add('hidden');
+            document.getElementById('utility-bar').classList.add('hidden');
+
+            document.getElementById('host-btn').disabled = false;
+            document.getElementById('join-btn').disabled = false;
+            document.getElementById('host-connect-btn').disabled = false;
+            document.getElementById('joiner-generate-btn').disabled = false;
+
+            document.getElementById('generated-token').value = "";
+            document.getElementById('friend-response-token').value = "";
+            document.getElementById('host-token-input').value = "";
+            document.getElementById('generated-response-token').value = "";
+
+            const box = document.getElementById('chat-box');
+            box.innerHTML = `
+                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
+                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
+                    Disconnected. Exchange tokens above to connect.
+                </div>`;
+
+            document.getElementById('msg-input').disabled = true;
+            document.getElementById('msg-input').placeholder = "Disconnected...";
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('clip-btn').disabled = true;
+            document.getElementById('mic-btn').disabled = true;
+            document.getElementById('mic-text').innerText = "Press to Speak";
         }
 
-        // --- P2P CONNECTION SETUPS ---
+        // --- P2P CONNECTION HANDLER STATE-ENGINES ---
         async function startAsHost() {
-            lockSetupButtons();
+            document.getElementById('selection-row').classList.add('hidden');
             document.getElementById('host-flow').classList.remove('hidden');
+            
             localConnection = new RTCPeerConnection(peerConfiguration);
             dataChannel = localConnection.createDataChannel("chatChannel");
             setupDataChannelEvents();
+            setupConnectionMonitoring();
+
             localConnection.onicecandidate = (e) => {
                 if (!e.candidate) {
                     document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
@@ -218,37 +276,87 @@
 
         async function connectHost() {
             const raw = document.getElementById('friend-response-token').value.trim();
-            if(!raw) return alert("Paste your friend's response token first!");
-            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid token block mapping."); }
+            if(!raw) return alert("Please copy your friend's response token first!");
+            try { 
+                document.getElementById('host-connect-btn').disabled = true;
+                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); 
+            } catch(e) { 
+                alert("Invalid configuration token passed."); 
+                document.getElementById('host-connect-btn').disabled = false;
+            }
         }
 
         function startAsJoiner() {
-            lockSetupButtons();
+            document.getElementById('selection-row').classList.add('hidden');
             document.getElementById('joiner-flow').classList.remove('hidden');
         }
 
         async function generateJoinerResponse() {
             const raw = document.getElementById('host-token-input').value.trim();
-            if(!raw) return alert("Please paste host's token!");
+            if(!raw) return alert("Please supply host's deployment token string!");
             try {
+                document.getElementById('joiner-generate-btn').disabled = true;
                 localConnection = new RTCPeerConnection(peerConfiguration);
+                setupConnectionMonitoring();
+                
                 localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
                 localConnection.onicecandidate = (e) => {
                     if (!e.candidate) {
                         document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
                         document.getElementById('joiner-response-box').classList.remove('hidden');
-                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response ready. Send it back to host!`;
+                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response compiled! Send it back to host.`;
                     }
                 };
                 await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
                 await localConnection.setLocalDescription(await localConnection.createAnswer());
-            } catch(e) { alert("Corrupted token initialization array layers."); }
+            } catch(e) { 
+                alert("Corrupted verification keys."); 
+                document.getElementById('joiner-generate-btn').disabled = false;
+            }
+        }
+
+        function setupConnectionMonitoring() {
+            localConnection.onconnectionstatechange = () => {
+                if(localConnection.connectionState === "disconnected" || 
+                   localConnection.connectionState === "failed" || 
+                   localConnection.connectionState === "closed") {
+                    handlePeerDisconnectEvent();
+                }
+            };
+        }
+
+        function handlePeerDisconnectEvent() {
+            if(!isTunnelOpen) return;
+            isTunnelOpen = false;
+            
+            document.getElementById('status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> User disconnected`;
+            document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
+            
+            // Render internal alert box indicator inline inside history logs
+            const box = document.getElementById('chat-box');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-500 bg-rose-950/30 border border-rose-900/50 py-2 rounded-xl px-4";
+            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected from session channel.`;
+            box.appendChild(alertDiv);
+            snapToBottom();
+
+            // Lock Input Nodes
+            document.getElementById('msg-input').disabled = true;
+            document.getElementById('msg-input').placeholder = "User disconnected...";
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('clip-btn').disabled = true;
+            document.getElementById('mic-btn').disabled = true;
         }
 
         // --- PIPELINE TRAFFIC HANDLERS ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
-                const peerName = document.getElementById('username-input').value.trim() || 'Friend';
+                isTunnelOpen = true;
+                const myAlias = document.getElementById('username-input').value.trim() || 'User_A';
+                
+                // Signal identity packet out on line immediately
+                dataChannel.send(JSON.stringify({ type: 'handshake-identity', sender: myAlias }));
+
                 document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
                 document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
                 document.getElementById('setup-panel').classList.add('hidden');
@@ -264,11 +372,13 @@
 
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
-                playPing();
                 
-                // Track current system connected username and show in headers dynamically
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
+                if(p.type === 'handshake-identity') {
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
+                    return;
+                }
 
+                playPing();
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
@@ -283,17 +393,10 @@
                 else snapToBottom();
             };
 
-            dataChannel.onclose = () => {
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Disconnected`;
-                document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
-                document.getElementById('msg-input').disabled = true;
-                document.getElementById('send-btn').disabled = true;
-                document.getElementById('clip-btn').disabled = true;
-                document.getElementById('mic-btn').disabled = true;
-            };
+            dataChannel.onclose = () => { handlePeerDisconnectEvent(); };
         }
 
-        // --- OUTGOING DATA PACKETS ---
+        // --- PACKET SEND TRANSLATION SYSTEMS ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
@@ -329,31 +432,38 @@
             r.readAsDataURL(f);
         }
 
-        // --- PRESS TO SPEAK VOICE RECORDER SYSTEM ---
+        // --- PRESS TO SPEAK HARDWARE CAPTURES WITH AUTO-RELEASE ---
         async function startVoiceRecord(event) {
-            event.preventDefault(); // Stop mobile selection delays
+            event.preventDefault(); 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                // Enforce a higher quality structural constraints channel audio stream
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                activeAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(activeAudioStream, { mimeType: 'audio/webm' });
                 audioChunks = [];
                 
                 mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Forces normal speaker routing output 
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); 
                     const reader = new FileReader();
                     reader.onload = function(ev) {
                         const name = document.getElementById('username-input').value.trim() || 'User_A';
                         const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         const base64Audio = ev.target.result;
 
-                        dataChannel.send(JSON.stringify({ type: 'voice', audioData: base64Audio, sender: name, time: stamp }));
-                        displayVoiceBubble(base64Audio, 'sent', name, stamp);
-                        internalLogMemory.push(`[${stamp}] ${name}: [Voice Note]`);
-                        snapToBottom();
+                        if (dataChannel && dataChannel.readyState === "open") {
+                            dataChannel.send(JSON.stringify({ type: 'voice', audioData: base64Audio, sender: name, time: stamp }));
+                            displayVoiceBubble(base64Audio, 'sent', name, stamp);
+                            internalLogMemory.push(`[${stamp}] ${name}: [Voice Note]`);
+                            snapToBottom();
+                        }
                     };
                     reader.readAsDataURL(audioBlob);
+                    
+                    // CRITICAL PATCH: Hardware track shutoffs to prevent layout/mic locks
+                    if(activeAudioStream) {
+                        activeAudioStream.getTracks().forEach(track => track.stop());
+                        activeAudioStream = null;
+                    }
                 };
 
                 mediaRecorder.start();
@@ -370,7 +480,7 @@
             }
         }
 
-        // --- VIEW PRESENTATIONS ---
+        // --- UI DRAW LAYOUT RENDERERS ---
         function displayMessage(text, type, user, time) {
             const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
@@ -402,16 +512,15 @@
 
             div.innerHTML = `
                 <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user} <i class="fa-solid fa-waveform"></i></span>
-                <div class="${style} shadow-sm"><audio src="${data}" controls style="speaker: loudspeaker;" class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-95"></audio></div>
+                <div class="${style} shadow-sm"><audio src="${data}" controls class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-95" style="display: block; width: 100%;"></audio></div>
                 <span class="text-[9px] text-gray-600 font-medium">${time}</span>
             `;
             box.appendChild(div);
         }
 
-        // --- AUTOMATED FILE CRYPTO ENGINE LAYER ---
+        // --- AUTOMATED NO-PASSWORD SECURITY WRAPPER LOGS ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No history logged yet!");
-            // Automatically signs and locks file via programmatic signature block
             const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
             const element = document.createElement('a');
             element.href = URL.createObjectURL(new Blob([encryptedString], {type: 'text/plain'}));
@@ -428,7 +537,6 @@
             reader.onload = function(e) {
                 try {
                     const cipherText = e.target.result;
-                    // Automatically uses the matching key signature verification blocks
                     const bytes = CryptoJS.AES.decrypt(cipherText, FIXED_INTERNAL_KEY);
                     const originalText = bytes.toString(CryptoJS.enc.Utf8);
 
@@ -449,4 +557,3 @@
     </script>
 </body>
 </html>
-        
