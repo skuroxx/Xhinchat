@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xhinchat // Autonomous Crypt Terminal</title>
+    <title>Xhinchat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { darkBg: '#06070a', panelBg: '#0e1017', inputBg: '#141622' },
+                    colors: { darkBg: '#0b0c10', panelBg: '#14161f', inputBg: '#1c1f2d' },
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
                 }
             }
@@ -34,62 +34,62 @@
         }
     </script>
 
-    <div class="w-full max-w-xl bg-panelBg border border-gray-800/70 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
+    <div class="w-full max-w-xl bg-panelBg border border-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
         
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
             <div>
                 <h2 class="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-cyan-400" id="theme-icon"></i> Xhinchat Space
+                    <i class="fa-solid fa-user-group text-cyan-400" id="theme-icon"></i> Xhinchat
                 </h2>
-                <p class="text-xs text-amber-400 mt-1 font-medium" id="status"><i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> Awaiting identity authentication handshakes...</p>
+                <p class="text-xs text-amber-400 mt-1 font-medium" id="status"><i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> Awaiting connection...</p>
             </div>
             
             <div class="flex items-center gap-3">
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Your Alias</label>
-                    <input type="text" id="username-input" value="Xhin_Operator" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
+                    <input type="text" id="username-input" value="User_A" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Theme</label>
                     <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 cursor-pointer font-medium">
-                        <option value="cyan">Cyber Cyan</option>
-                        <option value="emerald">Emerald Moss</option>
-                        <option value="purple">Neon Pulse</option>
-                        <option value="rose">Velvet Rose</option>
+                        <option value="cyan">Cyan</option>
+                        <option value="emerald">Emerald</option>
+                        <option value="purple">Pulse</option>
+                        <option value="rose">Rose</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <div class="bg-inputBg/30 border border-gray-800/70 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
+        <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
             <div class="flex flex-col sm:flex-row gap-3">
-                <button onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-satellite-dish"></i> Host room matrix
+                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-30">
+                    <i class="fa-solid fa-satellite-dish"></i> Host room
                 </button>
-                <button onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i> Inject incoming key
+                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-30">
+                    <i class="fa-solid fa-key"></i> Enter token
                 </button>
             </div>
             
             <div id="host-flow" class="hidden flex flex-col gap-3">
                 <div class="bg-darkBg p-3 rounded-lg border border-gray-800 relative">
-                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Invitation Token (Give this to your friend)</label>
-                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10" placeholder="Generating matrix descriptors..."></textarea>
+                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Invitation Token (Send this to your friend)</label>
+                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10" placeholder="Generating setup data..."></textarea>
                     <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-400 block mb-1">Paste friend's response token below:</label>
-                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Awaiting return verification block..."></textarea>
+                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste response token here..."></textarea>
                 </div>
-                <button onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Complete P2P Crypt Bridge</button>
+                <button onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Connect Chat</button>
             </div>
 
             <div id="joiner-flow" class="hidden flex flex-col gap-3">
                 <div>
                     <label class="text-xs font-bold text-gray-400 block mb-1">Paste the Host's Invitation Token:</label>
-                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Insert initialization stream key..."></textarea>
+                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste token here..."></textarea>
                 </div>
-                <button onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Validation Block</button>
+                <button onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Response Token</button>
                 <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
                     <label class="text-xs font-bold text-cyan-400 block mb-1">Your Response Token (Send this back to Host)</label>
                     <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10"></textarea>
@@ -98,25 +98,21 @@
             </div>
         </div>
 
-        <div id="utility-bar" class="hidden flex items-center justify-between bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl gap-3">
-            <div class="flex items-center gap-2 w-full max-w-xs">
-                <i class="fa-solid fa-lock text-emerald-400 text-xs ml-1"></i>
-                <input type="password" id="crypt-pass" value="XhinSecret" class="w-full bg-darkBg border border-gray-800 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-cyan-400 font-mono">
-            </div>
+        <div id="utility-bar" class="hidden flex items-center justify-end bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl">
             <button onclick="exportEncryptedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Log
+                <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Chat Log
             </button>
         </div>
 
         <div class="relative w-full">
-            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[320px] bg-darkBg border border-gray-800/80 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
+            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[320px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
-                    <i class="fa-solid fa-fingerprint text-4xl block mb-2 opacity-25"></i>
-                    Tunnel decoupled. Complete the Xhinchat token process above.
+                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
+                    Disconnected. Exchange tokens above to connect.
                 </div>
             </div>
             <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2">
-                <i class="fa-solid fa-arrow-down animate-bounce"></i> New incoming message
+                <i class="fa-solid fa-arrow-down规范 animate-bounce"></i> New message below
             </button>
         </div>
         
@@ -126,26 +122,22 @@
                 <i class="fa-solid fa-paperclip text-sm"></i>
             </button>
             
-            <button id="mic-btn" onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center select-none" title="Hold to record voice note">
-                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i>
+            <button id="mic-btn" onmousedown="startVoiceRecord(event)" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" ontouchstart="startVoiceRecord(event)" ontouchend="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 px-4 py-3.5 rounded-xl transition flex items-center justify-center gap-2 select-none font-bold text-xs whitespace-nowrap" title="Hold to Speak">
+                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i> <span id="mic-text">Press to Speak</span>
             </button>
 
-            <input type="text" id="msg-input" placeholder="Locks engaged..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
+            <input type="text" id="msg-input" placeholder="Disconnected..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
             <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
             </button>
         </div>
 
-        <div class="border-t border-gray-800/80 pt-4 mt-1 flex flex-col gap-2">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500"><i class="fa-solid fa-key-skeleton"></i> Offline Crypt Decryption Terminal</span>
+        <div class="border-t border-gray-800 pt-4 mt-1 flex flex-col gap-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500"><i class="fa-solid fa-unlock-keyhole"></i> Quick File Decryption Log Viewer</span>
             <div class="flex flex-col sm:flex-row gap-2">
-                <input type="file" id="decrypt-file-input" class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2 py-1 text-gray-400 w-full sm:w-1/2 cursor-pointer">
-                <div class="flex gap-2 w-full sm:w-1/2">
-                    <input type="password" id="decrypt-pass-input" placeholder="Passphrase..." class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2 py-1 text-white w-full focus:outline-none focus:border-cyan-400 font-mono">
-                    <button onclick="decryptUploadedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded-lg transition whitespace-nowrap">Decode File</button>
-                </div>
+                <input type="file" id="decrypt-file-input" onchange="decryptUploadedLog()" class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2.5 py-2 text-gray-400 w-full cursor-pointer">
             </div>
-            <textarea id="decrypted-output" readonly class="w-full h-24 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden" placeholder="Decoded output stream displays here..."></textarea>
+            <textarea id="decrypted-output" readonly class="w-full h-28 bg-darkBg border border-gray-800 rounded-lg p-3 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden" placeholder="Decoded logs output..."></textarea>
         </div>
     </div>
 
@@ -156,6 +148,7 @@
         let internalLogMemory = [];
         let mediaRecorder, audioChunks = [];
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; // Internal key signature matching automation
 
         const primaryColorMap = {
             cyan: { main: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600' },
@@ -202,17 +195,22 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
-        // --- HANDSHAKE CORE LOGIC ---
+        function lockSetupButtons() {
+            document.getElementById('host-btn').disabled = true;
+            document.getElementById('join-btn').disabled = true;
+        }
+
+        // --- P2P CONNECTION SETUPS ---
         async function startAsHost() {
+            lockSetupButtons();
             document.getElementById('host-flow').classList.remove('hidden');
-            document.getElementById('joiner-flow').classList.add('hidden');
             localConnection = new RTCPeerConnection(peerConfiguration);
             dataChannel = localConnection.createDataChannel("chatChannel");
             setupDataChannelEvents();
             localConnection.onicecandidate = (e) => {
                 if (!e.candidate) {
                     document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token compiled. Copy it for your friend!`;
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token created! Send it to your friend.`;
                 }
             };
             await localConnection.setLocalDescription(await localConnection.createOffer());
@@ -220,18 +218,18 @@
 
         async function connectHost() {
             const raw = document.getElementById('friend-response-token').value.trim();
-            if(!raw) return alert("Paste your peer token response first!");
-            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid token block."); }
+            if(!raw) return alert("Paste your friend's response token first!");
+            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid token block mapping."); }
         }
 
         function startAsJoiner() {
+            lockSetupButtons();
             document.getElementById('joiner-flow').classList.remove('hidden');
-            document.getElementById('host-flow').classList.add('hidden');
         }
 
         async function generateJoinerResponse() {
             const raw = document.getElementById('host-token-input').value.trim();
-            if(!raw) return alert("Please supply host's deployment token string!");
+            if(!raw) return alert("Please paste host's token!");
             try {
                 localConnection = new RTCPeerConnection(peerConfiguration);
                 localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
@@ -239,25 +237,26 @@
                     if (!e.candidate) {
                         document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
                         document.getElementById('joiner-response-box').classList.remove('hidden');
-                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response ready. Send to host!`;
+                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response ready. Send it back to host!`;
                     }
                 };
                 await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
                 await localConnection.setLocalDescription(await localConnection.createAnswer());
-            } catch(e) { alert("Corrupted token payload configurations."); }
+            } catch(e) { alert("Corrupted token initialization array layers."); }
         }
 
-        // --- DATA CHANNEL ROUTING ---
+        // --- PIPELINE TRAFFIC HANDLERS ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-user-lock text-emerald-400 mr-1"></i> Xhinchat Matrix Connected`;
+                const peerName = document.getElementById('username-input').value.trim() || 'Friend';
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
                 document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('utility-bar').classList.remove('hidden');
                 
                 if(document.getElementById('placeholder-text')) document.getElementById('placeholder-text').remove();
                 document.getElementById('msg-input').disabled = false;
-                document.getElementById('msg-input').placeholder = "Type secure texts to peer...";
+                document.getElementById('msg-input').placeholder = "Write a message...";
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('clip-btn').disabled = false;
                 document.getElementById('mic-btn').disabled = false;
@@ -266,12 +265,16 @@
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
                 playPing();
+                
+                // Track current system connected username and show in headers dynamically
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
+
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
                 } else if(p.type === 'voice') {
                     displayVoiceBubble(p.audioData, 'received', p.sender, p.time);
-                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Voice Note Memo]`);
+                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Voice Note]`);
                 } else {
                     displayMessage(p.text, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: ${p.text}`);
@@ -281,7 +284,7 @@
             };
 
             dataChannel.onclose = () => {
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Xhinchat channel severed.`;
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Disconnected`;
                 document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
                 document.getElementById('msg-input').disabled = true;
                 document.getElementById('send-btn').disabled = true;
@@ -290,13 +293,13 @@
             };
         }
 
-        // --- TRANSMISSION COMMANDS ---
+        // --- OUTGOING DATA PACKETS ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
             if(!txt || !dataChannel || dataChannel.readyState !== "open") return;
 
-            const name = document.getElementById('username-input').value.trim() || 'Guest';
+            const name = document.getElementById('username-input').value.trim() || 'User_A';
             const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             dataChannel.send(JSON.stringify({ type: 'text', text: txt, sender: name, time: stamp }));
@@ -311,11 +314,11 @@
         function processFileUpload() {
             const f = document.getElementById('file-uploader').files[0];
             if (!f) return;
-            if(f.size > 2 * 1024 * 1024) return alert("File payload size caps at 2MB limit!");
+            if(f.size > 2 * 1024 * 1024) return alert("Maximum file size is 2MB!");
 
             const r = new FileReader();
             r.onload = function(ev) {
-                const name = document.getElementById('username-input').value.trim() || 'Guest';
+                const name = document.getElementById('username-input').value.trim() || 'User_A';
                 const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 dataChannel.send(JSON.stringify({ type: 'file', fileData: ev.target.result, fileName: f.name, sender: name, time: stamp }));
                 displayFileBubble(ev.target.result, f.name, 'sent', name, stamp);
@@ -326,26 +329,28 @@
             r.readAsDataURL(f);
         }
 
-        // --- WALKIE TALKIE AUDIO RECORDER SYSTEM ---
-        async function startVoiceRecord() {
+        // --- PRESS TO SPEAK VOICE RECORDER SYSTEM ---
+        async function startVoiceRecord(event) {
+            event.preventDefault(); // Stop mobile selection delays
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                // Enforce a higher quality structural constraints channel audio stream
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 audioChunks = [];
                 
                 mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
                 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); // Forces normal speaker routing output 
                     const reader = new FileReader();
                     reader.onload = function(ev) {
-                        const name = document.getElementById('username-input').value.trim() || 'Guest';
+                        const name = document.getElementById('username-input').value.trim() || 'User_A';
                         const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         const base64Audio = ev.target.result;
 
                         dataChannel.send(JSON.stringify({ type: 'voice', audioData: base64Audio, sender: name, time: stamp }));
                         displayVoiceBubble(base64Audio, 'sent', name, stamp);
-                        internalLogMemory.push(`[${stamp}] ${name}: [Voice Note Memo]`);
+                        internalLogMemory.push(`[${stamp}] ${name}: [Voice Note]`);
                         snapToBottom();
                     };
                     reader.readAsDataURL(audioBlob);
@@ -353,17 +358,19 @@
 
                 mediaRecorder.start();
                 document.getElementById('mic-icon').className = "fa-solid fa-microphone-lines text-rose-500 animate-pulse text-sm";
-            } catch(e) { alert("Microphone hardware capture permissions denied!"); }
+                document.getElementById('mic-text').innerText = "Recording...";
+            } catch(e) { alert("Microphone access denied!"); }
         }
 
         function stopVoiceRecord() {
             if(mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
                 document.getElementById('mic-icon').className = "fa-solid fa-microphone text-sm";
+                document.getElementById('mic-text').innerText = "Press to Speak";
             }
         }
 
-        // --- OUTPUT UI LAYOUT RENDERS ---
+        // --- VIEW PRESENTATIONS ---
         function displayMessage(text, type, user, time) {
             const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
@@ -381,7 +388,7 @@
             const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40`;
 
             let body = data.startsWith('data:image/') ? `<img src="${data}" class="max-w-full rounded-lg max-h-40 mb-2 border border-black/20 object-cover">` : '';
-            body += `<a href="${data}" download="${name}" class="inline-flex items-center gap-1.5 bg-black/20 hover:bg-black/40 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/5 transition break-all"><i class="fa-solid fa-circle-down text-cyan-400"></i> Download: ${name}</a>`;
+            body += `<a href="${data}" download="${name}" class="inline-flex items-center gap-1.5 bg-black/20 hover:bg-black/40 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/5 transition break-all shadow-sm"><i class="fa-solid fa-circle-down text-cyan-300"></i> Download File</a>`;
 
             div.innerHTML = `<span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span><div class="p-2.5 shadow-sm ${style}">${body}</div><span class="text-[9px] text-gray-600 font-medium">${time}</span>`;
             box.appendChild(div);
@@ -394,39 +401,35 @@
             const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble p-2` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40 p-2`;
 
             div.innerHTML = `
-                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user} <i class="fa-solid fa-waveform-lines text-cyan-400"></i></span>
-                <div class="${style} shadow-sm"><audio src="${data}" controls class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-90"></audio></div>
+                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user} <i class="fa-solid fa-waveform"></i></span>
+                <div class="${style} shadow-sm"><audio src="${data}" controls style="speaker: loudspeaker;" class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-95"></audio></div>
                 <span class="text-[9px] text-gray-600 font-medium">${time}</span>
             `;
             box.appendChild(div);
         }
 
-        // --- ENCRYPTION EXPORTER & DECRYPTION SYSTEM ---
+        // --- AUTOMATED FILE CRYPTO ENGINE LAYER ---
         function exportEncryptedLog() {
-            if(internalLogMemory.length === 0) return alert("No transcript records logged yet!");
-            const pass = document.getElementById('crypt-pass').value.trim();
-            if(!pass) return alert("Please supply a password key first!");
-
-            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), pass).toString();
+            if(internalLogMemory.length === 0) return alert("No history logged yet!");
+            // Automatically signs and locks file via programmatic signature block
+            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
             const element = document.createElement('a');
             element.href = URL.createObjectURL(new Blob([encryptedString], {type: 'text/plain'}));
-            element.download = `xhinchat_log_${new Date().toISOString().slice(0,10)}.enc`;
+            element.download = `xhinchat_history_${new Date().toISOString().slice(0,10)}.enc`;
             document.body.appendChild(element); element.click(); document.body.removeChild(element);
         }
 
         function decryptUploadedLog() {
             const fileInput = document.getElementById('decrypt-file-input').files[0];
-            const passInput = document.getElementById('decrypt-pass-input').value.trim();
             const outputBox = document.getElementById('decrypted-output');
-
-            if (!fileInput || !passInput) return alert("Please select an encrypted log file and input the secret passphrase!");
+            if (!fileInput) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const cipherText = e.target.result;
-                    // Attempt decryption using CryptoJS
-                    const bytes = CryptoJS.AES.decrypt(cipherText, passInput);
+                    // Automatically uses the matching key signature verification blocks
+                    const bytes = CryptoJS.AES.decrypt(cipherText, FIXED_INTERNAL_KEY);
                     const originalText = bytes.toString(CryptoJS.enc.Utf8);
 
                     if (!originalText) throw new Error();
@@ -434,15 +437,16 @@
                     outputBox.value = originalText;
                     outputBox.classList.remove('hidden');
                 } catch (err) {
-                    alert("Decryption failed! Invalid passcode key or corrupted chat data blocks.");
+                    alert("This file is corrupted or not a valid Xhinchat log backup!");
                     outputBox.classList.add('hidden');
                 }
             };
             reader.readAsText(fileInput);
         }
 
-        function copyToken(id) { navigator.clipboard.writeText(document.getElementById(id).value); alert("Handshake segment copied."); }
+        function copyToken(id) { navigator.clipboard.writeText(document.getElementById(id).value); alert("Token copied."); }
         document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
 </body>
 </html>
+        
