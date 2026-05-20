@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xhinchat // Instant Link P2P</title>
+    <title>Xhinchat // Secure P2P Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bugout@1/bugout.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
@@ -45,7 +44,7 @@
                     <i class="fa-solid fa-user-group text-cyan-400" id="theme-icon"></i> Xhinchat
                 </h2>
                 <p class="text-xs text-amber-400 mt-1 font-medium flex items-center gap-1" id="status">
-                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting setup...</span>
+                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting connection...</span>
                 </p>
             </div>
             
@@ -70,18 +69,38 @@
         </div>
 
         <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4 shadow-inner" id="setup-panel">
-            <div id="lobby-view" class="flex flex-col gap-3 text-center">
-                <p class="text-xs text-gray-400">Generate a high-speed secure room link to connect instantly.</p>
-                <button id="host-btn" onclick="initializeHostWorkflow()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-share-nodes"></i> Create Instant Invitation Link
+            <div class="flex flex-col sm:flex-row gap-3" id="selection-row">
+                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-satellite-dish"></i> Host room
+                </button>
+                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-key"></i> Enter token
                 </button>
             </div>
+            
+            <div id="host-flow" class="hidden flex flex-col gap-3">
+                <div class="bg-darkBg p-3 rounded-lg border border-gray-800 relative">
+                    <label class="text-xs font-bold text-cyan-400 block mb-1">1. Copy this room code & send to your friend:</label>
+                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-400 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
+                    <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 block mb-1">2. Paste friend's response token code below:</label>
+                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste response code text block here..."></textarea>
+                </div>
+                <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Establish P2P Connection</button>
+            </div>
 
-            <div id="link-sharing-view" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative flex flex-col gap-2">
-                <label id="share-label" class="text-xs font-bold text-cyan-400 block">Send this private link to your friend:</label>
-                <div class="flex gap-2">
-                    <input type="text" id="share-url-input" readonly class="w-full bg-inputBg border border-gray-800 text-xs font-mono text-gray-300 rounded-lg px-3 py-2 focus:outline-none" value="Generating link...">
-                    <button id="copy-url-btn" onclick="copyShareURL()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 rounded-lg text-sm text-white transition"><i class="fa-regular fa-copy"></i></button>
+            <div id="joiner-flow" class="hidden flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 block mb-1">1. Paste the Host's room code here:</label>
+                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste incoming host code..."></textarea>
+                </div>
+                <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Compile Response Code</button>
+                <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
+                    <label class="text-xs font-bold text-cyan-400 block mb-1">2. Send this response code back to the Host:</label>
+                    <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-400 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
+                    <button onclick="copyToken('generated-response-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
                 </div>
             </div>
         </div>
@@ -96,7 +115,7 @@
             <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[340px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Create or open an invitation link to begin.
+                    Disconnected. Exchange manual codes above to open chat.
                 </div>
             </div>
             <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2 z-10">
@@ -133,7 +152,6 @@
         let isUserScrolledUp = false;
         let internalLogMemory = [];
         let isTunnelOpen = false;
-        let bgtSignaler = null;
         
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; 
@@ -145,83 +163,6 @@
             rose: { main: 'bg-rose-500', hover: 'hover:bg-rose-600', text: 'text-rose-400', border: 'focus:border-rose-400', msg: 'bg-rose-600' }
         };
 
-        // --- INSTANT WEB-TRACKER HANDSHAKES ---
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomCode = urlParams.get('room');
-            if(roomCode) {
-                document.getElementById('username-input').value = "User_B";
-                initializeJoinerWorkflow(roomCode);
-            }
-        };
-
-        function initializeHostWorkflow() {
-            document.getElementById('lobby-view').classList.add('hidden');
-            document.getElementById('link-sharing-view').classList.remove('hidden');
-            document.getElementById('status').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Launching link...`;
-
-            // Create a completely random room address identifier string
-            const roomCode = "xhin-" + Math.random().toString(36).substring(2, 12);
-            document.getElementById('share-url-input').value = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
-
-            // Initialize Bugout instant websocket relay connection
-            bgtSignaler = new Bugout(roomCode);
-
-            localConnection = new RTCPeerConnection(peerConfiguration);
-            dataChannel = localConnection.createDataChannel("chatChannel");
-            setupDataChannelEvents();
-            setupConnectionMonitoring();
-
-            localConnection.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    const hostOffer = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Link active! Share it with your friend.`;
-                    
-                    // Listen for the joiner to request the key packets
-                    bgtSignaler.on("seen", (address) => {
-                        bgtSignaler.send(address, { type: "offer", data: hostOffer });
-                    });
-                }
-            };
-
-            // Catch the joiner's immediate response packet
-            bgtSignaler.on("message", async (address, packet) => {
-                if(packet.type === "answer") {
-                    await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(packet.data))));
-                    bgtSignaler.destroy(); // Shut down the relay immediately to keep the chat 100% private P2P
-                }
-            });
-
-            localConnection.createOffer().then(offer => localConnection.setLocalDescription(offer));
-        }
-
-        function initializeJoinerWorkflow(roomCode) {
-            document.getElementById('lobby-view').classList.add('hidden');
-            document.getElementById('link-sharing-view').classList.remove('hidden');
-            document.getElementById('share-label').innerText = "Connecting to P2P network bridge...";
-            document.getElementById('share-url-input').value = "Synchronizing keys...";
-            document.getElementById('status').innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Authenticating room link...`;
-
-            bgtSignaler = new Bugout(roomCode);
-            localConnection = new RTCPeerConnection(peerConfiguration);
-            setupConnectionMonitoring();
-            
-            localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
-
-            bgtSignaler.on("message", async (address, packet) => {
-                if(packet.type === "offer") {
-                    await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(packet.data))));
-                    const answer = await localConnection.createAnswer();
-                    await localConnection.setLocalDescription(answer);
-                    
-                    const joinerAnswer = btoa(JSON.stringify(localConnection.localDescription));
-                    bgtSignaler.send({ type: "answer", data: joinerAnswer });
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-1 text-amber-400"></i> Opening encrypted data highway...`;
-                }
-            });
-        }
-
-        // --- SYSTEM ENGINE FUNCTIONS ---
         function changeTheme() {
             const select = document.getElementById('theme-select');
             const newTheme = select.value;
@@ -260,6 +201,74 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
+        function lockSetupButtons() {
+            document.getElementById('host-btn').disabled = true;
+            document.getElementById('join-btn').disabled = true;
+        }
+
+        // --- P2P CONNECTION SETUPS ---
+        async function startAsHost() {
+            lockSetupButtons();
+            document.getElementById('selection-row').classList.add('hidden');
+            document.getElementById('host-flow').classList.remove('hidden');
+            
+            localConnection = new RTCPeerConnection(peerConfiguration);
+            dataChannel = localConnection.createDataChannel("chatChannel");
+            setupDataChannelEvents();
+            setupConnectionMonitoring();
+
+            localConnection.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    // Compress text content block string tightly
+                    document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Code ready. Copy step 1!`;
+                }
+            };
+            await localConnection.setLocalDescription(await localConnection.createOffer());
+        }
+
+        async function connectHost() {
+            const raw = document.getElementById('friend-response-token').value.trim();
+            if(!raw) return alert("Please paste the response code first!");
+            try { 
+                document.getElementById('host-connect-btn').disabled = true;
+                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); 
+            } catch(e) { 
+                alert("Invalid code pasted."); 
+                document.getElementById('host-connect-btn').disabled = false;
+            }
+        }
+
+        function startAsJoiner() {
+            lockSetupButtons();
+            document.getElementById('selection-row').classList.add('hidden');
+            document.getElementById('joiner-flow').classList.remove('hidden');
+        }
+
+        async function generateJoinerResponse() {
+            const raw = document.getElementById('host-token-input').value.trim();
+            if(!raw) return alert("Please paste the host's room code first!");
+            try {
+                document.getElementById('joiner-generate-btn').disabled = true;
+                localConnection = new RTCPeerConnection(peerConfiguration);
+                setupConnectionMonitoring();
+                
+                localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
+                localConnection.onicecandidate = (e) => {
+                    if (!e.candidate) {
+                        document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
+                        document.getElementById('joiner-response-box').classList.remove('hidden');
+                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response compiled! Copy step 2.`;
+                    }
+                };
+                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
+                await localConnection.setLocalDescription(await localConnection.createAnswer());
+            } catch(e) { 
+                alert("Corrupted code format."); 
+                document.getElementById('joiner-generate-btn').disabled = false;
+            }
+        }
+
         function setupConnectionMonitoring() {
             localConnection.onconnectionstatechange = () => {
                 if(localConnection.connectionState === "disconnected" || 
@@ -273,7 +282,6 @@
         function handlePeerDisconnectEvent() {
             if(!isTunnelOpen) return;
             isTunnelOpen = false;
-            if(bgtSignaler) bgtSignaler.destroy();
             
             document.getElementById('status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> User disconnected`;
             document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
@@ -281,7 +289,7 @@
             const box = document.getElementById('chat-box');
             const alertDiv = document.createElement('div');
             alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-500 bg-rose-950/30 border border-rose-900/50 py-2 rounded-xl px-4";
-            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected from session channel.`;
+            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected.`;
             box.appendChild(alertDiv);
             snapToBottom();
 
@@ -291,12 +299,12 @@
             document.getElementById('clip-btn').disabled = true;
         }
 
+        // --- DATA TUNNEL HIGHWAY ROUTINES ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
                 isTunnelOpen = true;
-                if(bgtSignaler) bgtSignaler.destroy(); // Hard sever relay line on open P2P stream success
-                
                 const myAlias = document.getElementById('username-input').value.trim() || 'User_A';
+                
                 dataChannel.send(JSON.stringify({ type: 'handshake-identity', sender: myAlias }));
 
                 document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
@@ -313,10 +321,12 @@
 
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
+                
                 if(p.type === 'handshake-identity') {
                     document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
                     return;
                 }
+
                 playPing();
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
@@ -352,7 +362,7 @@
         function processFileUpload() {
             const f = document.getElementById('file-uploader').files[0];
             if (!f) return;
-            if(f.size > 2 * 1024 * 1024) return alert("Maximum file size limit is 2MB!");
+            if(f.size > 2 * 1024 * 1024) return alert("Maximum file size is 2MB!");
 
             const r = new FileReader();
             r.onload = function(ev) {
@@ -368,28 +378,37 @@
         }
 
         function resetTerminalState() {
-            if(bgtSignaler) { bgtSignaler.destroy(); bgtSignaler = null; }
             if(dataChannel) { dataChannel.close(); dataChannel = null; }
             if(localConnection) { localConnection.close(); localConnection = null; }
 
             isTunnelOpen = false;
             internalLogMemory = [];
-            window.history.pushState({}, '', window.location.pathname); 
 
             document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
             document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
             
             document.getElementById('setup-panel').classList.remove('hidden');
-            document.getElementById('lobby-view').classList.remove('hidden');
-            document.getElementById('link-sharing-view').classList.add('hidden');
+            document.getElementById('selection-row').classList.remove('hidden');
+            document.getElementById('host-flow').classList.add('hidden');
+            document.getElementById('joiner-flow').classList.add('hidden');
+            document.getElementById('joiner-response-box').classList.add('hidden');
             document.getElementById('utility-bar').classList.add('hidden');
-            document.getElementById('share-label').innerText = "Send this private link to your friend:";
+
+            document.getElementById('host-btn').disabled = false;
+            document.getElementById('join-btn').disabled = false;
+            document.getElementById('host-connect-btn').disabled = false;
+            document.getElementById('joiner-generate-btn').disabled = false;
+
+            document.getElementById('generated-token').value = "";
+            document.getElementById('friend-response-token').value = "";
+            document.getElementById('host-token-input').value = "";
+            document.getElementById('generated-response-token').value = "";
 
             const box = document.getElementById('chat-box');
             box.innerHTML = `
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Create or open an invitation link to begin.
+                    Disconnected. Exchange manual codes above to open chat.
                 </div>`;
 
             document.getElementById('msg-input').disabled = true;
@@ -398,7 +417,7 @@
             document.getElementById('clip-btn').disabled = true;
         }
 
-        // --- DRAW LAYERS ---
+        // --- DRAW FUNCTIONS ---
         function displayMessage(text, type, user, time) {
             const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
@@ -422,6 +441,7 @@
             box.appendChild(div);
         }
 
+        // --- TRANSCRIPT HANDLING ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No history logged yet!");
             const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
@@ -442,20 +462,24 @@
                     const cipherText = e.target.result;
                     const bytes = CryptoJS.AES.decrypt(cipherText, FIXED_INTERNAL_KEY);
                     const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
                     if (!originalText) throw new Error();
+
                     outputBox.value = originalText;
                     outputBox.classList.remove('hidden');
                 } catch (err) {
-                    alert("Invalid or corrupted log backup file!");
+                    alert("This file is corrupted or not a valid Xhinchat log backup!");
                     outputBox.classList.add('hidden');
                 }
             };
             reader.readAsText(fileInput);
         }
 
-        function copyShareURL() {
-            navigator.clipboard.writeText(document.getElementById('share-url-input').value);
-            alert("Invitation link copied to clipboard!");
+        function copyToken(id) { 
+            const textarea = document.getElementById(id);
+            textarea.select();
+            navigator.clipboard.writeText(textarea.value); 
+            alert("Code text copied to clipboard!"); 
         }
         document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
