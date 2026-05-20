@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Xhinchat // Premium P2P Workspace</title>
-    <!-- Tailwind CSS, FontAwesome, & CryptoJS -->
+    <title>Xhinchat // Premium Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -13,7 +12,12 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { darkBg: '#050609', panelBg: '#0b0d14', inputBg: '#111420', bubblePeer: '#161a29' },
+                    colors: { 
+                        darkBg: '#050609', 
+                        panelBg: '#0b0d14', 
+                        inputBg: '#111420', 
+                        bubblePeer: '#161a29' 
+                    },
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
                 }
             }
@@ -33,9 +37,8 @@
         .bounce-dot:nth-child(3) { animation-delay: 0.4s; }
     </style>
 </head>
-<body class="bg-darkBg text-gray-200 min-h-screen w-screen flex items-center justify-center p-0 sm:p-4 select-none font-sans antialiased overflow-hidden">
+<body class="bg-darkBg text-gray-200 min-h-screen w-screen flex items-center justify-center sm:p-4 select-none font-sans antialiased overflow-hidden">
 
-    <!-- Audio Synthesizer Engine -->
     <script>
         let audioContextInstance = null;
         function getAudioContext() {
@@ -75,10 +78,8 @@
         }
     </script>
 
-    <!-- Master Glass UI Console Panel Container -->
-    <div class="w-full h-full sm:h-[90vh] sm:max-w-xl bg-panelBg sm:border sm:border-gray-800/40 sm:rounded-3xl shadow-2xl flex flex-col p-4 sm:p-6 gap-4 relative justify-between overflow-hidden">
+    <div class="w-full h-full sm:h-auto sm:max-w-xl bg-panelBg sm:border sm:border-gray-800/40 sm:rounded-3xl shadow-2xl flex flex-col p-4 sm:p-6 gap-4 relative justify-between overflow-y-auto">
         
-        <!-- Header Panel -->
         <div class="flex items-center justify-between gap-3 border-b border-gray-800/50 pb-3 shrink-0">
             <div>
                 <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
@@ -102,8 +103,7 @@
             </div>
         </div>
 
-        <!-- Connection Handshake Panel -->
-        <div class="bg-inputBg/30 border border-gray-800/60 p-4 rounded-2xl flex flex-col gap-3 shadow-inner shrink-0 overflow-y-auto max-h-[45%]" id="setup-panel">
+        <div class="bg-inputBg/30 border border-gray-800/60 p-4 rounded-2xl flex flex-col gap-3 shadow-inner shrink-0" id="setup-panel">
             <div class="flex gap-3" id="selection-row">
                 <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-satellite-dish"></i> Host Room
@@ -113,7 +113,6 @@
                 </button>
             </div>
             
-            <!-- Host View Setup -->
             <div id="host-flow" class="hidden flex flex-col gap-3">
                 <div class="bg-darkBg/50 p-3 rounded-xl border border-gray-800 relative shadow-inner">
                     <label class="text-[10px] font-extrabold text-cyan-400 block mb-1 uppercase tracking-wider">1. Copy this room code & send to your friend:</label>
@@ -127,7 +126,6 @@
                 <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">Establish Connection</button>
             </div>
 
-            <!-- Joiner View Setup -->
             <div id="joiner-flow" class="hidden flex flex-col gap-3">
                 <div class="bg-darkBg/50 p-3 rounded-xl border border-gray-800 shadow-inner">
                     <label class="text-[10px] font-extrabold text-gray-400 block mb-1 uppercase tracking-wider">1. Paste the Host's room code here:</label>
@@ -135,7 +133,6 @@
                 </div>
                 <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">Compile Response Code</button>
                 
-                <!-- Fixed Hidden Box Bug Container -->
                 <div id="joiner-response-box" class="hidden bg-darkBg/70 p-3 rounded-xl border border-gray-800 relative mt-1 shadow-inner">
                     <label class="text-[10px] font-extrabold text-cyan-400 block mb-1 uppercase tracking-wider">2. Send this response code back to the Host:</label>
                     <textarea id="generated-response-token" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full h-16 bg-transparent text-xs font-mono text-gray-400 focus:outline-none resize-none pr-8 overflow-y-auto" onclick="this.select()"></textarea>
@@ -144,15 +141,13 @@
             </div>
         </div>
 
-        <!-- Utility Toolbar -->
-        <div id="utility-bar" class="hidden flex items-center justify-end border-b border-gray-800 pb-2 shrink-0">
+        <div id="utility-bar" class="hidden flex items-center justify-end border-b border-gray-900 pb-2 shrink-0">
             <button onclick="exportEncryptedLog()" class="bg-gray-800/40 hover:bg-gray-800 border border-gray-700/60 text-gray-400 hover:text-gray-200 text-[10px] font-bold py-1 px-2.5 rounded-lg flex items-center gap-1 transition shadow-sm">
                 <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Logs
             </button>
         </div>
 
-        <!-- Chat Feed Area -->
-        <div class="relative w-full flex-1 min-h-[250px] overflow-hidden">
+        <div class="relative w-full flex-1 min-h-[320px] sm:h-[350px]">
             <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-full bg-darkBg border border-gray-900 rounded-2xl overflow-y-auto p-4 flex flex-col gap-3.5 shadow-inner">
                 <div class="text-center text-xs text-gray-600 my-auto p-6" id="placeholder-text">
                     <i class="fa-solid fa-shield-halved text-4xl block mb-2 opacity-20"></i>
@@ -164,7 +159,6 @@
             </button>
         </div>
 
-        <!-- Typing Indicator -->
         <div id="typing-hud" class="w-full pl-2 text-[10px] text-gray-500 font-extrabold items-center gap-1.5 h-4 hidden shrink-0 tracking-wide">
             <span id="typing-hud-text">Peer is typing</span>
             <div class="flex gap-0.5 items-center">
@@ -174,7 +168,6 @@
             </div>
         </div>
         
-        <!-- Inputs UI Dock Layout -->
         <div class="flex gap-2.5 items-center w-full shrink-0">
             <input type="file" id="file-uploader" class="hidden" onchange="processFileUpload()">
             <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-20 p-3.5 rounded-xl transition flex items-center justify-center shrink-0 shadow-md">
@@ -189,8 +182,7 @@
             </div>
         </div>
 
-        <!-- Decryption Log Sandbox -->
-        <div class="border-t border-gray-900 pt-3 flex flex-col gap-1.5 shrink-0 overflow-y-auto max-h-[25%]">
+        <div class="border-t border-gray-900 pt-3 flex flex-col gap-1.5 shrink-0">
             <span class="text-[9px] uppercase font-black tracking-wider text-gray-500 flex items-center gap-1"><i class="fa-solid fa-unlock-keyhole text-gray-600"></i> Local Crypt Decryption Viewer</span>
             <input type="file" id="decrypt-file-input" onchange="decryptUploadedLog()" class="bg-inputBg/40 border border-gray-800 text-[10px] rounded-xl px-2.5 py-1.5 text-gray-400 w-full cursor-pointer file:bg-gray-800 file:text-gray-300 file:border-0 file:rounded file:text-[10px] file:font-bold file:px-2 file:mr-2">
             <textarea id="decrypted-output" readonly class="w-full h-16 bg-darkBg border border-gray-800 rounded-xl p-2 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden shadow-inner"></textarea>
@@ -301,7 +293,7 @@
             document.getElementById('brand-text').className = `bg-gradient-to-r ${newConf.main} bg-clip-text text-transparent text-2xl font-black tracking-tight`;
             document.getElementById('status-dot').className = `w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${isTunnelOpen ? 'text-emerald-400 bg-emerald-400' : 'text-amber-400 bg-amber-400 animate-pulse'}`;
             document.getElementById('msg-input').className = `w-full bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3 focus:outline-none ${newConf.border} disabled:opacity-45 min-w-0 shadow-inner transition-all`;
-            document.getElementById('unread-badge').className = `hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-${newTheme}-500 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-full shadow-lg flex items-center gap-1.5 z-10 hover:scale-105 active:scale-95 transition-all`;
+            document.getElementById('unread-badge').classList.replace('bg-cyan-500', 'bg-' + newTheme + '-500');
             document.querySelectorAll('.sent-bubble-node').forEach(b => b.className = `px-4 py-2.5 text-xs break-all leading-relaxed shadow-md sent-bubble-node ${newConf.msg}`);
             currentThemeColor = newTheme;
         }
@@ -331,7 +323,6 @@
             }
         }
 
-        // Forced Scroll Bottom Handler
         function snapToBottom() {
             const box = document.getElementById('chat-box'); box.scrollTop = box.scrollHeight;
             document.getElementById('unread-badge').classList.add('hidden');
@@ -365,7 +356,7 @@
 
         async function connectHost() {
             let raw = document.getElementById('friend-response-token').value.trim();
-            raw = raw.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s/g, '');
+            raw = raw.replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/\s/g, '');
             if(!raw) return alert("Please paste the response token code first!");
             try { 
                 document.getElementById('host-connect-btn').disabled = true;
@@ -382,7 +373,7 @@
 
         async function generateJoinerResponse() {
             let raw = document.getElementById('host-token-input').value.trim();
-            raw = raw.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/\s/g, '');
+            raw = raw.replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/\s/g, '');
             if(!raw) return alert("Please paste the host's room code first!");
             try {
                 document.getElementById('joiner-generate-btn').disabled = true;
@@ -396,7 +387,7 @@
                     if (!e.candidate) {
                         const answer = btoa(JSON.stringify(localConnection.localDescription));
                         
-                        // Fix for response container availability revealing components
+                        // CRITICAL UI BUG REPAIR: Toggle visibility on token payload availability
                         document.getElementById('generated-response-token').value = answer;
                         localStorage.setItem('xhin_rtc_local_desc', answer);
                         document.getElementById('joiner-response-box').classList.remove('hidden');
@@ -500,7 +491,6 @@
             dataChannel.onclose = () => { handlePeerDisconnectEvent(); };
         }
 
-        // --- DATA DISPATCH SHUTTLES ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
@@ -581,7 +571,7 @@
             document.getElementById('chat-box').innerHTML = `
                 <div class="text-center text-xs text-gray-600 my-auto p-6" id="placeholder-text">
                     <i class="fa-solid fa-shield-halved text-3xl block mb-2 opacity-20"></i>
-                    Disconnected. Exchange validation tokens above to open chat.
+                    Disconnected. Exchange manual codes above to open chat.
                 </div>`;
 
             document.getElementById('msg-input').disabled = true; document.getElementById('msg-input').placeholder = "Locks engaged...";
@@ -622,13 +612,12 @@
             }
 
             div.innerHTML = `<span class="text-[10px] text-gray-500 font-extrabold px-1 tracking-wide">${user}</span>${bubbleContent}<div class="flex items-center gap-1.5 px-1 mt-0.5">${receiptLine}<span class="text-[9px] text-gray-600 font-medium tracking-tight">${time}</span></div>`;
-            box.appendChild(div);
+      box.appendChild(div);
         }
 
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No logs recorded!");
-            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('
-'), FIXED_INTERNAL_KEY).toString();
+            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
             const element = document.createElement('a');
             element.href = URL.createObjectURL(new Blob([encryptedString], {type: 'text/plain'}));
             element.download = `xhinchat_history_${new Date().toISOString().slice(0,10)}.enc`;
