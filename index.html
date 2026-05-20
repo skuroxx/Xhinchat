@@ -64,7 +64,7 @@
         <div class="bg-inputBg/30 border border-gray-800/70 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
             <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-satellite-dish"></i> Host room matrix
+                    <i class="fa-solid fa-satellite-dish"></i> Host room
                 </button>
                 <button onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-key"></i> Inject incoming key
@@ -294,4 +294,72 @@
             r.onload = function(ev) {
                 const name = document.getElementById('username-input').value.trim() || 'Guest';
                 const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                dataChannel.send(J
+                dataChannel.send(JSON.stringify({ type: 'file', fileData: ev.target.result, fileName: f.name, sender: name, time: stamp }));
+                displayFileBubble(ev.target.result, f.name, 'sent', name, stamp);
+                internalLogMemory.push(`[${stamp}] ${name}: [Shared File: ${f.name}]`);
+                document.getElementById('file-uploader').value = '';
+                snapToBottom();
+            };
+            r.readAsDataURL(f);
+        }
+
+        // --- OUTPUT UI FORMATTERS ---
+        function displayMessage(text, type, user, time) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
+            const activeColor = primaryColorMap[currentThemeColor];
+            const style = type === 'sent' ? `${activeColor.main} text-white rounded-2xl rounded-tr-none sent-bubble shadow-md` : `bg-gray-800/90 text-gray-200 rounded-2xl rounded-tl-none border border-gray-700/30`;
+
+            div.innerHTML = `
+                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span>
+                <div class="px-4 py-2 text-sm break-all leading-relaxed ${style}">${formatMessageText(text)}</div>
+                <span class="text-[9px] text-gray-600 font-medium mt-0.5">${time}</span>
+            `;
+            box.appendChild(div);
+        }
+
+        function displayFileBubble(data, name, type, user, time) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `flex flex-col w-full max-w-[75%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
+            const activeColor = primaryColorMap[currentThemeColor];
+            const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40`;
+
+            let body = data.startsWith('data:image/') ? `<img src="${data}" class="max-w-full rounded-lg max-h-40 mb-2 border border-black/20 object-cover">` : '';
+            body += `<a href="${data}" download="${name}" class="flex items-center gap-2 font-bold underline text-xs break-all"><i class="fa-solid fa-file-arrow-down text-sm"></i> ${name}</a>`;
+
+            div.innerHTML = `
+                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span>
+                <div class="p-2.5 shadow-sm ${style}">${body}</div>
+                <span class="text-[9px] text-gray-600 font-medium">${time}</span>
+            `;
+            box.appendChild(div);
+        }
+
+        // --- LOCAL SECURITY CRYPTO LAYER ---
+        function exportEncryptedLog() {
+            if(internalLogMemory.length === 0) return alert("No transcript records logged yet!");
+            const pass = document.getElementById('crypt-pass').value.trim();
+            if(!pass) return alert("Please supply a decryption passphrase string in the utility dock input field!");
+
+            const rawTextLog = internalLogMemory.join('\n');
+            
+            // Perform AES-256 local operational cipher block compilation
+            const encryptedString = CryptoJS.AES.encrypt(rawTextLog, pass).toString();
+
+            // Structure safe local browser payload download trigger hooks
+            const element = document.createElement('a');
+            const file = new Blob([encryptedString], {type: 'text/plain'});
+            element.href = URL.createObjectURL(file);
+            element.download = `encrypted_session_log_${new Date().toISOString().slice(0,10)}.enc`;
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function copyToken(id) { navigator.clipboard.writeText(document.getElementById(id).value); alert("Handshake segment copied."); }
+        document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
