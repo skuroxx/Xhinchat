@@ -128,10 +128,6 @@
             <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center shrink-0">
                 <i class="fa-solid fa-paperclip text-sm"></i>
             </button>
-            
-            <button id="mic-btn" onmousedown="startVoiceRecord(event)" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" ontouchstart="startVoiceRecord(event)" ontouchend="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 px-3.5 py-3.5 rounded-xl transition flex items-center justify-center gap-2 select-none font-bold text-xs whitespace-nowrap shrink-0">
-                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i> <span id="mic-text" class="hidden sm:inline">Press to Speak</span>
-            </button>
 
             <div class="flex-1 relative min-w-0 flex gap-2">
                 <input type="text" id="msg-input" placeholder="Disconnected..." disabled class="w-full bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50 min-w-0">
@@ -152,11 +148,9 @@
 
     <script>
         let localConnection = null, dataChannel = null;
-        let activeAudioStream = null;
         let currentThemeColor = 'cyan';
         let isUserScrolledUp = false;
         let internalLogMemory = [];
-        let mediaRecorder = null, audioChunks = [];
         let isTunnelOpen = false;
         
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -207,57 +201,14 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
-        function resetTerminalState() {
-            // Explicitly kill active stream references 
-            if(activeAudioStream) {
-                activeAudioStream.getTracks().forEach(track => track.stop());
-                activeAudioStream = null;
-            }
-            if(dataChannel) { dataChannel.close(); dataChannel = null; }
-            if(localConnection) { localConnection.close(); localConnection = null; }
-
-            isTunnelOpen = false;
-            internalLogMemory = [];
-
-            // UI Refresh Back to Default State
-            document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
-            document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
-            
-            document.getElementById('setup-panel').classList.remove('hidden');
-            document.getElementById('selection-row').classList.remove('hidden');
-            document.getElementById('host-flow').classList.add('hidden');
-            document.getElementById('joiner-flow').classList.add('hidden');
-            document.getElementById('joiner-response-box').classList.add('hidden');
-            document.getElementById('utility-bar').classList.add('hidden');
-
-            document.getElementById('host-btn').disabled = false;
-            document.getElementById('join-btn').disabled = false;
-            document.getElementById('host-connect-btn').disabled = false;
-            document.getElementById('joiner-generate-btn').disabled = false;
-
-            document.getElementById('generated-token').value = "";
-            document.getElementById('friend-response-token').value = "";
-            document.getElementById('host-token-input').value = "";
-            document.getElementById('generated-response-token').value = "";
-
-            const box = document.getElementById('chat-box');
-            box.innerHTML = `
-                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
-                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Exchange tokens above to connect.
-                </div>`;
-
-            document.getElementById('msg-input').disabled = true;
-            document.getElementById('msg-input').placeholder = "Disconnected...";
-            document.getElementById('send-btn').disabled = true;
-            document.getElementById('clip-btn').disabled = true;
-            document.getElementById('mic-btn').disabled = true;
-            document.getElementById('mic-text').innerText = "Press to Speak";
+        function lockSetupButtons() {
+            document.getElementById('host-btn').disabled = true;
+            document.getElementById('join-btn').disabled = true;
         }
 
-        // --- P2P CONNECTION HANDLER STATE-ENGINES ---
+        // --- P2P CONNECTION SETUPS ---
         async function startAsHost() {
-            document.getElementById('selection-row').classList.add('hidden');
+            lockSetupButtons();
             document.getElementById('host-flow').classList.remove('hidden');
             
             localConnection = new RTCPeerConnection(peerConfiguration);
@@ -287,13 +238,13 @@
         }
 
         function startAsJoiner() {
-            document.getElementById('selection-row').classList.add('hidden');
+            lockSetupButtons();
             document.getElementById('joiner-flow').classList.remove('hidden');
         }
 
         async function generateJoinerResponse() {
             const raw = document.getElementById('host-token-input').value.trim();
-            if(!raw) return alert("Please supply host's deployment token string!");
+            if(!raw) return alert("Please copy host's deployment token string!");
             try {
                 document.getElementById('joiner-generate-btn').disabled = true;
                 localConnection = new RTCPeerConnection(peerConfiguration);
@@ -332,7 +283,6 @@
             document.getElementById('status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> User disconnected`;
             document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
             
-            // Render internal alert box indicator inline inside history logs
             const box = document.getElementById('chat-box');
             const alertDiv = document.createElement('div');
             alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-500 bg-rose-950/30 border border-rose-900/50 py-2 rounded-xl px-4";
@@ -340,12 +290,10 @@
             box.appendChild(alertDiv);
             snapToBottom();
 
-            // Lock Input Nodes
             document.getElementById('msg-input').disabled = true;
             document.getElementById('msg-input').placeholder = "User disconnected...";
             document.getElementById('send-btn').disabled = true;
             document.getElementById('clip-btn').disabled = true;
-            document.getElementById('mic-btn').disabled = true;
         }
 
         // --- PIPELINE TRAFFIC HANDLERS ---
@@ -354,11 +302,10 @@
                 isTunnelOpen = true;
                 const myAlias = document.getElementById('username-input').value.trim() || 'User_A';
                 
-                // Signal identity packet out on line immediately
                 dataChannel.send(JSON.stringify({ type: 'handshake-identity', sender: myAlias }));
 
                 document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
-                document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
+                document.getElementById('status').className= "text-xs text-emerald-400 font-bold mt-1";
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('utility-bar').classList.remove('hidden');
                 
@@ -367,7 +314,6 @@
                 document.getElementById('msg-input').placeholder = "Write a message...";
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('clip-btn').disabled = false;
-                document.getElementById('mic-btn').disabled = false;
             };
 
             dataChannel.onmessage = (e) => {
@@ -382,9 +328,6 @@
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
-                } else if(p.type === 'voice') {
-                    displayVoiceBubble(p.audioData, 'received', p.sender, p.time);
-                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Voice Note]`);
                 } else {
                     displayMessage(p.text, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: ${p.text}`);
@@ -432,52 +375,44 @@
             r.readAsDataURL(f);
         }
 
-        // --- PRESS TO SPEAK HARDWARE CAPTURES WITH AUTO-RELEASE ---
-        async function startVoiceRecord(event) {
-            event.preventDefault(); 
-            try {
-                activeAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(activeAudioStream, { mimeType: 'audio/webm' });
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' }); 
-                    const reader = new FileReader();
-                    reader.onload = function(ev) {
-                        const name = document.getElementById('username-input').value.trim() || 'User_A';
-                        const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        const base64Audio = ev.target.result;
+        function resetTerminalState() {
+            if(dataChannel) { dataChannel.close(); dataChannel = null; }
+            if(localConnection) { localConnection.close(); localConnection = null; }
 
-                        if (dataChannel && dataChannel.readyState === "open") {
-                            dataChannel.send(JSON.stringify({ type: 'voice', audioData: base64Audio, sender: name, time: stamp }));
-                            displayVoiceBubble(base64Audio, 'sent', name, stamp);
-                            internalLogMemory.push(`[${stamp}] ${name}: [Voice Note]`);
-                            snapToBottom();
-                        }
-                    };
-                    reader.readAsDataURL(audioBlob);
-                    
-                    // CRITICAL PATCH: Hardware track shutoffs to prevent layout/mic locks
-                    if(activeAudioStream) {
-                        activeAudioStream.getTracks().forEach(track => track.stop());
-                        activeAudioStream = null;
-                    }
-                };
+            isTunnelOpen = false;
+            internalLogMemory = [];
 
-                mediaRecorder.start();
-                document.getElementById('mic-icon').className = "fa-solid fa-microphone-lines text-rose-500 animate-pulse text-sm";
-                document.getElementById('mic-text').innerText = "Recording...";
-            } catch(e) { alert("Microphone access denied!"); }
-        }
+            document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
+            document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
+            
+            document.getElementById('setup-panel').classList.remove('hidden');
+            document.getElementById('selection-row').classList.remove('hidden');
+            document.getElementById('host-flow').classList.add('hidden');
+            document.getElementById('joiner-flow').classList.add('hidden');
+            document.getElementById('joiner-response-box').classList.add('hidden');
+            document.getElementById('utility-bar').classList.add('hidden');
 
-        function stopVoiceRecord() {
-            if(mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                document.getElementById('mic-icon').className = "fa-solid fa-microphone text-sm";
-                document.getElementById('mic-text').innerText = "Press to Speak";
-            }
+            document.getElementById('host-btn').disabled = false;
+            document.getElementById('join-btn').disabled = false;
+            document.getElementById('host-connect-btn').disabled = false;
+            document.getElementById('joiner-generate-btn').disabled = false;
+
+            document.getElementById('generated-token').value = "";
+            document.getElementById('friend-response-token').value = "";
+            document.getElementById('host-token-input').value = "";
+            document.getElementById('generated-response-token').value = "";
+
+            const box = document.getElementById('chat-box');
+            box.innerHTML = `
+                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
+                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
+                    Disconnected. Exchange tokens above to connect.
+                </div>`;
+
+            document.getElementById('msg-input').disabled = true;
+            document.getElementById('msg-input').placeholder = "Disconnected...";
+            document.getElementById('send-btn').disabled = true;
+            document.getElementById('clip-btn').disabled = true;
         }
 
         // --- UI DRAW LAYOUT RENDERERS ---
@@ -504,21 +439,7 @@
             box.appendChild(div);
         }
 
-        function displayVoiceBubble(data, type, user, time) {
-            const box = document.getElementById('chat-box'); const div = document.createElement('div');
-            div.className = `flex flex-col w-full max-w-[75%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
-            const activeColor = primaryColorMap[currentThemeColor];
-            const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble p-2` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40 p-2`;
-
-            div.innerHTML = `
-                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user} <i class="fa-solid fa-waveform"></i></span>
-                <div class="${style} shadow-sm"><audio src="${data}" controls class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-95" style="display: block; width: 100%;"></audio></div>
-                <span class="text-[9px] text-gray-600 font-medium">${time}</span>
-            `;
-            box.appendChild(div);
-        }
-
-        // --- AUTOMATED NO-PASSWORD SECURITY WRAPPER LOGS ---
+        // --- AUTOMATED FILE CRYPTO ENGINE LAYER ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No history logged yet!");
             const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
