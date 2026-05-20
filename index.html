@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xhinchat</title>
+    <title>Xhinchat // Autonomous Crypt Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { darkBg: '#07080c', panelBg: '#0f111a', inputBg: '#151824' },
+                    colors: { darkBg: '#06070a', panelBg: '#0e1017', inputBg: '#141622' },
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
                 }
             }
@@ -39,7 +39,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
             <div>
                 <h2 class="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-user-lock text-cyan-400" id="theme-icon"></i> Crypt-Space P2P
+                    <i class="fa-solid fa-user-shield text-cyan-400" id="theme-icon"></i> Xhinchat Space
                 </h2>
                 <p class="text-xs text-amber-400 mt-1 font-medium" id="status"><i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> Awaiting identity authentication handshakes...</p>
             </div>
@@ -47,7 +47,7 @@
             <div class="flex items-center gap-3">
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Your Alias</label>
-                    <input type="text" id="username-input" value="Anon_Operator" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
+                    <input type="text" id="username-input" value="Xhin_Operator" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Theme</label>
@@ -64,7 +64,7 @@
         <div class="bg-inputBg/30 border border-gray-800/70 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
             <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-satellite-dish"></i> Host room
+                    <i class="fa-solid fa-satellite-dish"></i> Host room matrix
                 </button>
                 <button onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-key"></i> Inject incoming key
@@ -101,10 +101,10 @@
         <div id="utility-bar" class="hidden flex items-center justify-between bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl gap-3">
             <div class="flex items-center gap-2 w-full max-w-xs">
                 <i class="fa-solid fa-lock text-emerald-400 text-xs ml-1"></i>
-                <input type="password" id="crypt-pass" value="SafeRoomSecret" placeholder="Set chat log file password..." class="w-full bg-darkBg border border-gray-800 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-cyan-400 font-mono" title="This password encrypts your log file if exported!">
+                <input type="password" id="crypt-pass" value="XhinSecret" class="w-full bg-darkBg border border-gray-800 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-cyan-400 font-mono">
             </div>
             <button onclick="exportEncryptedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Encrypted Log
+                <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Log
             </button>
         </div>
 
@@ -112,11 +112,11 @@
             <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[320px] bg-darkBg border border-gray-800/80 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                 <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
                     <i class="fa-solid fa-fingerprint text-4xl block mb-2 opacity-25"></i>
-                    Tunnel decoupled. Complete the token key handshake process above.
+                    Tunnel decoupled. Complete the Xhinchat token process above.
                 </div>
             </div>
             <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2">
-                <i class="fa-solid fa-arrow-down animate-bounce"></i> New incoming sync text
+                <i class="fa-solid fa-arrow-down animate-bounce"></i> New incoming message
             </button>
         </div>
         
@@ -125,10 +125,27 @@
             <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center">
                 <i class="fa-solid fa-paperclip text-sm"></i>
             </button>
-            <input type="text" id="msg-input" placeholder="Tunnel secured locks engaged..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
+            
+            <button id="mic-btn" onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()" onmouseleave="stopVoiceRecord()" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center select-none" title="Hold to record voice note">
+                <i class="fa-solid fa-microphone text-sm" id="mic-icon"></i>
+            </button>
+
+            <input type="text" id="msg-input" placeholder="Locks engaged..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
             <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition">
                 <i class="fa-solid fa-paper-plane text-sm"></i>
             </button>
+        </div>
+
+        <div class="border-t border-gray-800/80 pt-4 mt-1 flex flex-col gap-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500"><i class="fa-solid fa-key-skeleton"></i> Offline Crypt Decryption Terminal</span>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input type="file" id="decrypt-file-input" class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2 py-1 text-gray-400 w-full sm:w-1/2 cursor-pointer">
+                <div class="flex gap-2 w-full sm:w-1/2">
+                    <input type="password" id="decrypt-pass-input" placeholder="Passphrase..." class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2 py-1 text-white w-full focus:outline-none focus:border-cyan-400 font-mono">
+                    <button onclick="decryptUploadedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded-lg transition whitespace-nowrap">Decode File</button>
+                </div>
+            </div>
+            <textarea id="decrypted-output" readonly class="w-full h-24 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden" placeholder="Decoded output stream displays here..."></textarea>
         </div>
     </div>
 
@@ -136,7 +153,8 @@
         let localConnection, dataChannel;
         let currentThemeColor = 'cyan';
         let isUserScrolledUp = false;
-        let internalLogMemory = []; // Array keeping track of messages dynamically for our file exporter
+        let internalLogMemory = [];
+        let mediaRecorder, audioChunks = [];
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
         const primaryColorMap = {
@@ -164,7 +182,6 @@
         }
 
         function formatMessageText(text) {
-            // Simple robust regex parser for code blocks (e.g. `text`) and formatting shortcuts natively
             let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             html = html.replace(/```([\s\S]+?)```/g, '<pre class="bg-black/40 text-gray-300 font-mono p-2 rounded-md my-1 text-xs border border-white/5 overflow-x-auto">$1</pre>');
             html = html.replace(/`([^`]+?)`/g, '<code class="bg-black/30 font-mono text-cyan-300 px-1 py-0.5 rounded text-xs">$1</code>');
@@ -185,7 +202,7 @@
             document.getElementById('unread-badge').classList.add('hidden');
         }
 
-        // --- HANDSHAKE CORE SHUTTLES ---
+        // --- HANDSHAKE CORE LOGIC ---
         async function startAsHost() {
             document.getElementById('host-flow').classList.remove('hidden');
             document.getElementById('joiner-flow').classList.add('hidden');
@@ -195,7 +212,7 @@
             localConnection.onicecandidate = (e) => {
                 if (!e.candidate) {
                     document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token compiled. Copy it for your peer!`;
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token compiled. Copy it for your friend!`;
                 }
             };
             await localConnection.setLocalDescription(await localConnection.createOffer());
@@ -203,8 +220,8 @@
 
         async function connectHost() {
             const raw = document.getElementById('friend-response-token').value.trim();
-            if(!raw) return alert("Paste your peer response token first!");
-            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid structure token parsed."); }
+            if(!raw) return alert("Paste your peer token response first!");
+            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid token block."); }
         }
 
         function startAsJoiner() {
@@ -222,27 +239,28 @@
                     if (!e.candidate) {
                         document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
                         document.getElementById('joiner-response-box').classList.remove('hidden');
-                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Verification ready. Send to host!`;
+                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response ready. Send to host!`;
                     }
                 };
                 await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
                 await localConnection.setLocalDescription(await localConnection.createAnswer());
-            } catch(e) { alert("Corrupted parsing execution errors!"); }
+            } catch(e) { alert("Corrupted token payload configurations."); }
         }
 
-        // --- PIPELINE HANDLERS ---
+        // --- DATA CHANNEL ROUTING ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-user-lock text-emerald-400 mr-1"></i> Quantum Crypt Link Established`;
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-user-lock text-emerald-400 mr-1"></i> Xhinchat Matrix Connected`;
                 document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('utility-bar').classList.remove('hidden');
                 
                 if(document.getElementById('placeholder-text')) document.getElementById('placeholder-text').remove();
                 document.getElementById('msg-input').disabled = false;
-                document.getElementById('msg-input').placeholder = "Type safe messages here (supports markdown formatting like `code` or **bold**)...";
+                document.getElementById('msg-input').placeholder = "Type secure texts to peer...";
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('clip-btn').disabled = false;
+                document.getElementById('mic-btn').disabled = false;
             };
 
             dataChannel.onmessage = (e) => {
@@ -251,6 +269,9 @@
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
+                } else if(p.type === 'voice') {
+                    displayVoiceBubble(p.audioData, 'received', p.sender, p.time);
+                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Voice Note Memo]`);
                 } else {
                     displayMessage(p.text, 'received', p.sender, p.time);
                     internalLogMemory.push(`[${p.time}] ${p.sender}: ${p.text}`);
@@ -260,14 +281,16 @@
             };
 
             dataChannel.onclose = () => {
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Space link decoupled.`;
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Xhinchat channel severed.`;
                 document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
                 document.getElementById('msg-input').disabled = true;
                 document.getElementById('send-btn').disabled = true;
                 document.getElementById('clip-btn').disabled = true;
+                document.getElementById('mic-btn').disabled = true;
             };
         }
 
+        // --- TRANSMISSION COMMANDS ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
@@ -288,7 +311,7 @@
         function processFileUpload() {
             const f = document.getElementById('file-uploader').files[0];
             if (!f) return;
-            if(f.size > 2 * 1024 * 1024) return alert("P2P pipelines dictate a 2MB maximum size cap!");
+            if(f.size > 2 * 1024 * 1024) return alert("File payload size caps at 2MB limit!");
 
             const r = new FileReader();
             r.onload = function(ev) {
@@ -303,59 +326,119 @@
             r.readAsDataURL(f);
         }
 
-        // --- OUTPUT UI FORMATTERS ---
+        // --- WALKIE TALKIE AUDIO RECORDER SYSTEM ---
+        async function startVoiceRecord() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const name = document.getElementById('username-input').value.trim() || 'Guest';
+                        const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const base64Audio = ev.target.result;
+
+                        dataChannel.send(JSON.stringify({ type: 'voice', audioData: base64Audio, sender: name, time: stamp }));
+                        displayVoiceBubble(base64Audio, 'sent', name, stamp);
+                        internalLogMemory.push(`[${stamp}] ${name}: [Voice Note Memo]`);
+                        snapToBottom();
+                    };
+                    reader.readAsDataURL(audioBlob);
+                };
+
+                mediaRecorder.start();
+                document.getElementById('mic-icon').className = "fa-solid fa-microphone-lines text-rose-500 animate-pulse text-sm";
+            } catch(e) { alert("Microphone hardware capture permissions denied!"); }
+        }
+
+        function stopVoiceRecord() {
+            if(mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                document.getElementById('mic-icon').className = "fa-solid fa-microphone text-sm";
+            }
+        }
+
+        // --- OUTPUT UI LAYOUT RENDERS ---
         function displayMessage(text, type, user, time) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
+            const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
             const activeColor = primaryColorMap[currentThemeColor];
             const style = type === 'sent' ? `${activeColor.main} text-white rounded-2xl rounded-tr-none sent-bubble shadow-md` : `bg-gray-800/90 text-gray-200 rounded-2xl rounded-tl-none border border-gray-700/30`;
 
-            div.innerHTML = `
-                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span>
-                <div class="px-4 py-2 text-sm break-all leading-relaxed ${style}">${formatMessageText(text)}</div>
-                <span class="text-[9px] text-gray-600 font-medium mt-0.5">${time}</span>
-            `;
+            div.innerHTML = `<span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span><div class="px-4 py-2 text-sm break-all leading-relaxed ${style}">${formatMessageText(text)}</div><span class="text-[9px] text-gray-600 font-medium mt-0.5">${time}</span>`;
             box.appendChild(div);
         }
 
         function displayFileBubble(data, name, type, user, time) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
+            const box = document.getElementById('chat-box'); const div = document.createElement('div');
             div.className = `flex flex-col w-full max-w-[75%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
             const activeColor = primaryColorMap[currentThemeColor];
             const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40`;
 
             let body = data.startsWith('data:image/') ? `<img src="${data}" class="max-w-full rounded-lg max-h-40 mb-2 border border-black/20 object-cover">` : '';
-            body += `<a href="${data}" download="${name}" class="flex items-center gap-2 font-bold underline text-xs break-all"><i class="fa-solid fa-file-arrow-down text-sm"></i> ${name}</a>`;
+            body += `<a href="${data}" download="${name}" class="inline-flex items-center gap-1.5 bg-black/20 hover:bg-black/40 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/5 transition break-all"><i class="fa-solid fa-circle-down text-cyan-400"></i> Download: ${name}</a>`;
+
+            div.innerHTML = `<span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span><div class="p-2.5 shadow-sm ${style}">${body}</div><span class="text-[9px] text-gray-600 font-medium">${time}</span>`;
+            box.appendChild(div);
+        }
+
+        function displayVoiceBubble(data, type, user, time) {
+            const box = document.getElementById('chat-box'); const div = document.createElement('div');
+            div.className = `flex flex-col w-full max-w-[75%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
+            const activeColor = primaryColorMap[currentThemeColor];
+            const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble p-2` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40 p-2`;
 
             div.innerHTML = `
-                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span>
-                <div class="p-2.5 shadow-sm ${style}">${body}</div>
+                <span class="text-[10px] text-gray-500 font-bold tracking-wide">${user} <i class="fa-solid fa-waveform-lines text-cyan-400"></i></span>
+                <div class="${style} shadow-sm"><audio src="${data}" controls class="h-8 max-w-full outline-none filter invert brightness-200 contrast-75 opacity-90"></audio></div>
                 <span class="text-[9px] text-gray-600 font-medium">${time}</span>
             `;
             box.appendChild(div);
         }
 
-        // --- LOCAL SECURITY CRYPTO LAYER ---
+        // --- ENCRYPTION EXPORTER & DECRYPTION SYSTEM ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No transcript records logged yet!");
             const pass = document.getElementById('crypt-pass').value.trim();
-            if(!pass) return alert("Please supply a decryption passphrase string in the utility dock input field!");
+            if(!pass) return alert("Please supply a password key first!");
 
-            const rawTextLog = internalLogMemory.join('\n');
-            
-            // Perform AES-256 local operational cipher block compilation
-            const encryptedString = CryptoJS.AES.encrypt(rawTextLog, pass).toString();
-
-            // Structure safe local browser payload download trigger hooks
+            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), pass).toString();
             const element = document.createElement('a');
-            const file = new Blob([encryptedString], {type: 'text/plain'});
-            element.href = URL.createObjectURL(file);
-            element.download = `encrypted_session_log_${new Date().toISOString().slice(0,10)}.enc`;
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
+            element.href = URL.createObjectURL(new Blob([encryptedString], {type: 'text/plain'}));
+            element.download = `xhinchat_log_${new Date().toISOString().slice(0,10)}.enc`;
+            document.body.appendChild(element); element.click(); document.body.removeChild(element);
+        }
+
+        function decryptUploadedLog() {
+            const fileInput = document.getElementById('decrypt-file-input').files[0];
+            const passInput = document.getElementById('decrypt-pass-input').value.trim();
+            const outputBox = document.getElementById('decrypted-output');
+
+            if (!fileInput || !passInput) return alert("Please select an encrypted log file and input the secret passphrase!");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const cipherText = e.target.result;
+                    // Attempt decryption using CryptoJS
+                    const bytes = CryptoJS.AES.decrypt(cipherText, passInput);
+                    const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+                    if (!originalText) throw new Error();
+
+                    outputBox.value = originalText;
+                    outputBox.classList.remove('hidden');
+                } catch (err) {
+                    alert("Decryption failed! Invalid passcode key or corrupted chat data blocks.");
+                    outputBox.classList.add('hidden');
+                }
+            };
+            reader.readAsText(fileInput);
         }
 
         function copyToken(id) { navigator.clipboard.writeText(document.getElementById(id).value); alert("Handshake segment copied."); }
