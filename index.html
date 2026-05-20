@@ -3,188 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serverless Peer-to-Peer Chat</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #0f0f12; color: #e0e0e6; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 100vh; padding: 20px; 
+    <title>Xhinchat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { darkBg: '#07080c', panelBg: '#0f111a', inputBg: '#151824' },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
+                }
+            }
         }
-        .chat-container { 
-            width: 100%; max-width: 500px; background: #16161a; 
-            border: 1px solid #24242b; border-radius: 12px; padding: 20px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); 
-        }
-        h2 { font-size: 1.4rem; margin-bottom: 15px; color: #fff; text-align: center;}
-        .setup-box { background: #1f1f27; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #2d2d38; }
-        label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #00adb5; font-weight: bold; }
-        textarea { width: 100%; height: 60px; background: #0b0b0d; border: 1px solid #2d2d38; color: #fff; padding: 8px; border-radius: 6px; resize: none; font-size: 0.8rem; margin-bottom: 10px; }
-        button { background: #00adb5; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; width: 100%; margin-bottom: 5px;}
-        button:hover { background: #008f96; }
-        .step-title { font-size: 0.9rem; margin-bottom: 8px; font-weight: bold; color: #fff; }
-        #chat-box { 
-            width: 100%; height: 250px; border: 1px solid #24242b; overflow-y: auto; 
-            padding: 15px; background: #0b0b0d; margin-bottom: 15px; border-radius: 8px;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .message { padding: 8px 14px; border-radius: 8px; max-width: 75%; word-break: break-word; font-size: 0.95rem; }
-        .sent { background: #00adb5; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .received { background: #24242b; color: #e0e0e6; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .input-group { display: flex; gap: 10px; }
-        #msg-input { flex: 1; padding: 12px; background: #1f1f27; border: 1px solid #2d2d38; color: #fff; border-radius: 8px; outline: none; }
-        #status { text-align: center; font-size: 0.85rem; margin-bottom: 10px; color: #ffbc00; }
-    </style>
+    </script>
 </head>
-<body>
+<body class="bg-darkBg text-gray-200 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none">
 
-    <div class="chat-container">
-        <h2>P2P Serverless Chat</h2>
-        <div id="status">Status: Waiting for Connection Setup...</div>
+    <script>
+        function playPing() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.3);
+        }
+    </script>
 
-        <div class="setup-box" id="setup-panel">
-            <div class="step-title">Step 1: Role Selection</div>
-            <button onclick="startAsHost()">I want to Host the room</button>
-            <button onclick="startAsJoiner()" style="background:#3e3e4f;">I have an invitation token</button>
-            
-            <div id="host-flow" style="display:none; margin-top:15px;">
-                <label>Your Token (Copy this and send to your friend):</label>
-                <textarea id="generated-token" readonly onclick="this.select()"></textarea>
-                <label>Paste friend's response token here to link up:</label>
-                <textarea id="friend-response-token" placeholder="Paste response token here..."></textarea>
-                <button onclick="connectHost()">Complete Connection</button>
+    <div class="w-full max-w-xl bg-panelBg border border-gray-800/70 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
+            <div>
+                <h2 class="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-user-lock text-cyan-400" id="theme-icon"></i> Crypt-Space P2P
+                </h2>
+                <p class="text-xs text-amber-400 mt-1 font-medium" id="status"><i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> Awaiting identity authentication handshakes...</p>
             </div>
-
-            <div id="joiner-flow" style="display:none; margin-top:15px;">
-                <label>Paste host's token here:</label>
-                <textarea id="host-token-input" placeholder="Paste host token here..."></textarea>
-                <button onclick="generateJoinerResponse()">Generate Response Token</button>
-                <label style="margin-top:10px;">Your Response Token (Send this back to Host):</label>
-                <textarea id="generated-response-token" readonly onclick="this.select()"></textarea>
+            
+            <div class="flex items-center gap-3">
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Your Alias</label>
+                    <input type="text" id="username-input" value="Anon_Operator" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-28 font-semibold">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Theme</label>
+                    <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 cursor-pointer font-medium">
+                        <option value="cyan">Cyber Cyan</option>
+                        <option value="emerald">Emerald Moss</option>
+                        <option value="purple">Neon Pulse</option>
+                        <option value="rose">Velvet Rose</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <div id="chat-box"></div>
-        <div class="input-group">
-            <input type="text" id="msg-input" placeholder="Type a message..." disabled>
-            <button id="send-btn" onclick="sendMessage()" style="width:auto; margin:0;" disabled>Send</button>
+        <div class="bg-inputBg/30 border border-gray-800/70 p-4 rounded-xl flex flex-col gap-4" id="setup-panel">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-satellite-dish"></i> Host room matrix
+                </button>
+                <button onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-key"></i> Inject incoming key
+                </button>
+            </div>
+            
+            <div id="host-flow" class="hidden flex flex-col gap-3">
+                <div class="bg-darkBg p-3 rounded-lg border border-gray-800 relative">
+                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Invitation Token (Give this to your friend)</label>
+                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10" placeholder="Generating matrix descriptors..."></textarea>
+                    <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 block mb-1">Paste friend's response token below:</label>
+                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Awaiting return verification block..."></textarea>
+                </div>
+                <button onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Complete P2P Crypt Bridge</button>
+            </div>
+
+            <div id="joiner-flow" class="hidden flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 block mb-1">Paste the Host's Invitation Token:</label>
+                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Insert initialization stream key..."></textarea>
+                </div>
+                <button onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Generate Validation Block</button>
+                <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
+                    <label class="text-xs font-bold text-cyan-400 block mb-1">Your Response Token (Send this back to Host)</label>
+                    <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10"></textarea>
+                    <button onclick="copyToken('generated-response-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="utility-bar" class="hidden flex items-center justify-between bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl gap-3">
+            <div class="flex items-center gap-2 w-full max-w-xs">
+                <i class="fa-solid fa-lock text-emerald-400 text-xs ml-1"></i>
+                <input type="password" id="crypt-pass" value="SafeRoomSecret" placeholder="Set chat log file password..." class="w-full bg-darkBg border border-gray-800 text-xs text-white rounded-lg px-2 py-1.5 focus:outline-none focus:border-cyan-400 font-mono" title="This password encrypts your log file if exported!">
+            </div>
+            <button onclick="exportEncryptedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Encrypted Log
+            </button>
+        </div>
+
+        <div class="relative w-full">
+            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[320px] bg-darkBg border border-gray-800/80 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
+                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
+                    <i class="fa-solid fa-fingerprint text-4xl block mb-2 opacity-25"></i>
+                    Tunnel decoupled. Complete the token key handshake process above.
+                </div>
+            </div>
+            <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2">
+                <i class="fa-solid fa-arrow-down animate-bounce"></i> New incoming sync text
+            </button>
+        </div>
+        
+        <div class="flex gap-2 items-center">
+            <input type="file" id="file-uploader" class="hidden" onchange="processFileUpload()">
+            <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center">
+                <i class="fa-solid fa-paperclip text-sm"></i>
+            </button>
+            <input type="text" id="msg-input" placeholder="Tunnel secured locks engaged..." disabled class="flex-1 bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50">
+            <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
         </div>
     </div>
 
     <script>
-        let localConnection;
-        let dataChannel;
-
-        // Configuration utilizing standard public STUN servers to locate public IP routing paths
+        let localConnection, dataChannel;
+        let currentThemeColor = 'cyan';
+        let isUserScrolledUp = false;
+        let internalLogMemory = []; // Array keeping track of messages dynamically for our file exporter
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // --- HOST FLOW LOGIC ---
-        async function startAsHost() {
-            document.getElementById('host-flow').style.display = 'block';
-            document.getElementById('joiner-flow').style.display = 'none';
+        const primaryColorMap = {
+            cyan: { main: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600' },
+            emerald: { main: 'bg-emerald-500', hover: 'hover:bg-emerald-600', text: 'text-emerald-400', border: 'focus:border-emerald-400', msg: 'bg-emerald-600' },
+            purple: { main: 'bg-purple-500', hover: 'hover:bg-purple-600', text: 'text-purple-400', border: 'focus:border-purple-400', msg: 'bg-purple-600' },
+            rose: { main: 'bg-rose-500', hover: 'hover:bg-rose-600', text: 'text-rose-400', border: 'focus:border-rose-400', msg: 'bg-rose-600' }
+        };
 
+        function changeTheme() {
+            const select = document.getElementById('theme-select');
+            const newTheme = select.value;
+            const oldConf = primaryColorMap[currentThemeColor];
+            const newConf = primaryColorMap[newTheme];
+
+            document.querySelectorAll(`.${oldConf.main}`).forEach(el => {
+                el.classList.replace(oldConf.main, newConf.main);
+                if (el.classList.contains('hover:' + oldConf.main.split('-')[1])) el.classList.replace(oldConf.hover, newConf.hover);
+            });
+            document.getElementById('theme-icon').classList.replace(oldConf.text, newConf.text);
+            document.getElementById('msg-input').classList.replace(oldConf.border, newConf.border);
+            document.getElementById('unread-badge').classList.replace(oldConf.main, newConf.main);
+            document.querySelectorAll('.sent-bubble').forEach(b => b.classList.replace(oldConf.msg, newConf.msg));
+            currentThemeColor = newTheme;
+        }
+
+        function formatMessageText(text) {
+            // Simple robust regex parser for code blocks (e.g. `text`) and formatting shortcuts natively
+            let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            html = html.replace(/```([\s\S]+?)```/g, '<pre class="bg-black/40 text-gray-300 font-mono p-2 rounded-md my-1 text-xs border border-white/5 overflow-x-auto">$1</pre>');
+            html = html.replace(/`([^`]+?)`/g, '<code class="bg-black/30 font-mono text-cyan-300 px-1 py-0.5 rounded text-xs">$1</code>');
+            html = html.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+            html = html.replace(/\*([^*]+?)\*/g, '<em class="italic">$1</em>');
+            return html;
+        }
+
+        function handleChatScroll() {
+            const box = document.getElementById('chat-box');
+            isUserScrolledUp = (box.scrollHeight - box.scrollTop - box.clientHeight) > 40;
+            if(!isUserScrolledUp) document.getElementById('unread-badge').classList.add('hidden');
+        }
+
+        function snapToBottom() {
+            const box = document.getElementById('chat-box');
+            box.scrollTop = box.scrollHeight;
+            document.getElementById('unread-badge').classList.add('hidden');
+        }
+
+        // --- HANDSHAKE CORE SHUTTLES ---
+        async function startAsHost() {
+            document.getElementById('host-flow').classList.remove('hidden');
+            document.getElementById('joiner-flow').classList.add('hidden');
             localConnection = new RTCPeerConnection(peerConfiguration);
             dataChannel = localConnection.createDataChannel("chatChannel");
-            
             setupDataChannelEvents();
-
             localConnection.onicecandidate = (e) => {
                 if (!e.candidate) {
-                    // Once all network pathways are resolved, compile token
                     document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerText = "Token Ready. Send it to your friend!";
+                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Token compiled. Copy it for your peer!`;
                 }
             };
-
-            const offer = await localConnection.createOffer();
-            await localConnection.setLocalDescription(offer);
+            await localConnection.setLocalDescription(await localConnection.createOffer());
         }
 
         async function connectHost() {
-            const friendTokenRaw = document.getElementById('friend-response-token').value.trim();
-            if(!friendTokenRaw) return alert("Please enter your friend's response token first!");
-            
-            const answerDesc = new RTCSessionDescription(JSON.parse(atob(friendTokenRaw)));
-            await localConnection.setRemoteDescription(answerDesc);
+            const raw = document.getElementById('friend-response-token').value.trim();
+            if(!raw) return alert("Paste your peer response token first!");
+            try { await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); } catch(e) { alert("Invalid structure token parsed."); }
         }
 
-
-        // --- JOINER FLOW LOGIC ---
         function startAsJoiner() {
-            document.getElementById('joiner-flow').style.display = 'block';
-            document.getElementById('host-flow').style.display = 'none';
+            document.getElementById('joiner-flow').classList.remove('hidden');
+            document.getElementById('host-flow').classList.add('hidden');
         }
 
         async function generateJoinerResponse() {
-            const hostTokenRaw = document.getElementById('host-token-input').value.trim();
-            if(!hostTokenRaw) return alert("Please paste the host's token first!");
-
-            localConnection = new RTCPeerConnection(peerConfiguration);
-            
-            localConnection.ondatachannel = (e) => {
-                dataChannel = e.channel;
-                setupDataChannelEvents();
-            };
-
-            localConnection.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerText = "Response Ready. Send it back to the Host!";
-                }
-            };
-
-            const offerDesc = new RTCSessionDescription(JSON.parse(atob(hostTokenRaw)));
-            await localConnection.setRemoteDescription(offerDesc);
-            
-            const answer = await localConnection.createAnswer();
-            await localConnection.setLocalDescription(answer);
+            const raw = document.getElementById('host-token-input').value.trim();
+            if(!raw) return alert("Please supply host's deployment token string!");
+            try {
+                localConnection = new RTCPeerConnection(peerConfiguration);
+                localConnection.ondatachannel = (e) => { dataChannel = e.channel; setupDataChannelEvents(); };
+                localConnection.onicecandidate = (e) => {
+                    if (!e.candidate) {
+                        document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
+                        document.getElementById('joiner-response-box').classList.remove('hidden');
+                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Verification ready. Send to host!`;
+                    }
+                };
+                await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
+                await localConnection.setLocalDescription(await localConnection.createAnswer());
+            } catch(e) { alert("Corrupted parsing execution errors!"); }
         }
 
-        // --- CORE COMMUNICATION LOGIC ---
+        // --- PIPELINE HANDLERS ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
-                document.getElementById('status').innerText = "Status: Connected! You can chat now.";
-                document.getElementById('status').style.color = "#00ff87";
-                document.getElementById('setup-panel').style.display = "none";
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-user-lock text-emerald-400 mr-1"></i> Quantum Crypt Link Established`;
+                document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
+                document.getElementById('setup-panel').classList.add('hidden');
+                document.getElementById('utility-bar').classList.remove('hidden');
+                
+                if(document.getElementById('placeholder-text')) document.getElementById('placeholder-text').remove();
                 document.getElementById('msg-input').disabled = false;
+                document.getElementById('msg-input').placeholder = "Type safe messages here (supports markdown formatting like `code` or **bold**)...";
                 document.getElementById('send-btn').disabled = false;
+                document.getElementById('clip-btn').disabled = false;
             };
 
             dataChannel.onmessage = (e) => {
-                displayMessage(e.data, 'received');
+                const p = JSON.parse(e.data);
+                playPing();
+                if(p.type === 'file') {
+                    displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
+                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
+                } else {
+                    displayMessage(p.text, 'received', p.sender, p.time);
+                    internalLogMemory.push(`[${p.time}] ${p.sender}: ${p.text}`);
+                }
+                if(isUserScrolledUp) document.getElementById('unread-badge').classList.remove('hidden');
+                else snapToBottom();
             };
-            
+
             dataChannel.onclose = () => {
-                document.getElementById('status').innerText = "Status: Disconnected.";
-                document.getElementById('status').style.color = "#ff4a4a";
+                document.getElementById('status').innerHTML = `<i class="fa-solid fa-ban text-rose-500 mr-1"></i> Space link decoupled.`;
+                document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
                 document.getElementById('msg-input').disabled = true;
                 document.getElementById('send-btn').disabled = true;
+                document.getElementById('clip-btn').disabled = true;
             };
         }
 
         function sendMessage() {
             const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if(!text || !dataChannel || dataChannel.readyState !== "open") return;
+            const txt = input.value.trim();
+            if(!txt || !dataChannel || dataChannel.readyState !== "open") return;
 
-            displayMessage(text, 'sent');
-            dataChannel.send(text);
+            const name = document.getElementById('username-input').value.trim() || 'Guest';
+            const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            dataChannel.send(JSON.stringify({ type: 'text', text: txt, sender: name, time: stamp }));
+            displayMessage(txt, 'sent', name, stamp);
+            internalLogMemory.push(`[${stamp}] ${name}: ${txt}`);
             input.value = '';
+            snapToBottom();
         }
 
-        function displayMessage(text, type) {
-            const chatBox = document.getElementById('chat-box');
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', type);
-            msgDiv.innerText = text;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        function triggerFileSelect() { document.getElementById('file-uploader').click(); }
 
-        document.getElementById('msg-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-    </script>
-</body>
-</html>
+        function processFileUpload() {
+            const f = document.getElementById('file-uploader').files[0];
+            if (!f) return;
+            if(f.size > 2 * 1024 * 1024) return alert("P2P pipelines dictate a 2MB maximum size cap!");
+
+            const r = new FileReader();
+            r.onload = function(ev) {
+                const name = document.getElementById('username-input').value.trim() || 'Guest';
+                const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                dataChannel.send(J
