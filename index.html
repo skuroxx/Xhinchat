@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xhinchat // Secure P2P Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Xhinchat // Premium P2P Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,53 +12,78 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { darkBg: '#0b0c10', panelBg: '#14161f', inputBg: '#1c1f2d' },
+                    colors: { 
+                        darkBg: '#08090c', 
+                        panelBg: '#111420', 
+                        inputBg: '#181c2e',
+                        bubblePeer: '#1f2438'
+                    },
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
                 }
             }
         }
     </script>
+    <style>
+        /* Smooth Custom Scrollbar for Chat Box */
+        #chat-box::-webkit-scrollbar { width: 6px; }
+        #chat-box::-webkit-scrollbar-track { background: transparent; }
+        #chat-box::-webkit-scrollbar-thumb { background: #2d3554; border-radius: 99px; }
+        #chat-box::-webkit-scrollbar-thumb:hover { background: #3f4a75; }
+    </style>
 </head>
-<body class="bg-darkBg text-gray-200 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none font-sans">
+<body class="bg-darkBg text-gray-200 min-h-screen flex items-center justify-center p-3 sm:p-6 select-none font-sans antialiased">
 
     <script>
-        function playPing() {
+        // Sound for Incoming Messages
+        function playIncomingSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator(); const gain = ctx.createGain();
                 osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, ctx.currentTime);
                 osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.setValueAtTime(0.06, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.start(); osc.stop(ctx.currentTime + 0.3);
             } catch(e) {}
         }
+        // Crisp Pop Sound for Outgoing Messages
+        function playOutgoingSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, ctx.currentTime);
+                osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.2);
+            } catch(e) {}
+        }
     </script>
 
-    <div class="w-full max-w-xl bg-panelBg border border-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 flex flex-col gap-4 relative">
+    <div class="w-full max-w-xl bg-panelBg border border-gray-800/60 rounded-3xl shadow-2xl shadow-black/80 p-4 sm:p-6 flex flex-col gap-5 relative backdrop-blur-md">
         
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800/80 pb-4">
             <div>
-                <h2 class="text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-user-group text-cyan-400" id="theme-icon"></i> Xhinchat
-                </h2>
-                <p class="text-xs text-amber-400 mt-1 font-medium flex items-center gap-1" id="status">
-                    <i class="fa-solid fa-circle-dot animate-pulse text-[10px]"></i> <span>Awaiting connection...</span>
+                <h1 class="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                    <span class="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent" id="brand-text">Xhinchat</span>
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></span>
+                </h1>
+                <p class="text-xs text-gray-400 font-semibold mt-0.5 flex items-center gap-1" id="status">
+                    Awaiting connection...
                 </p>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="resetTerminalState()" class="bg-gray-800/80 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrow-rotate-left"></i> Reset Terminal
+            <div class="flex items-center gap-2.5 self-end sm:self-center">
+                <button onclick="resetTerminalState()" class="bg-gray-800/60 hover:bg-rose-950/40 border border-gray-700/60 hover:border-rose-900/50 text-gray-300 hover:text-rose-400 font-bold px-3 py-2 rounded-xl text-xs transition-all duration-200 flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-power-off text-[10px]"></i> Reset Terminal
                 </button>
                 <div class="flex flex-col">
-                    <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Your Alias</label>
-                    <input type="text" id="username-input" value="User_A" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-cyan-400 w-24 font-semibold">
+                    <input type="text" id="username-input" value="User_A" oninput="saveIdentityState()" class="bg-inputBg border border-gray-700/70 text-xs font-bold rounded-xl px-2.5 py-2 text-white focus:outline-none focus:border-cyan-400 w-24 shadow-inner transition-colors">
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Theme</label>
-                    <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700 text-sm rounded-lg px-2 py-1 text-white focus:outline-none focus:border-cyan-400 cursor-pointer font-medium">
+                    <select id="theme-select" onchange="changeTheme()" class="bg-inputBg border border-gray-700/70 text-xs font-bold rounded-xl px-2 py-2 text-white focus:outline-none focus:border-cyan-400 cursor-pointer shadow-inner transition-colors">
                         <option value="cyan">Cyber Cyan</option>
                         <option value="emerald">Emerald Moss</option>
                         <option value="purple">Neon Pulse</option>
@@ -68,81 +93,81 @@
             </div>
         </div>
 
-        <div class="bg-inputBg/30 border border-gray-800/80 p-4 rounded-xl flex flex-col gap-4 shadow-inner" id="setup-panel">
+        <div class="bg-inputBg/40 border border-gray-800/70 p-4 rounded-2xl flex flex-col gap-4 shadow-inner transition-all" id="setup-panel">
             <div class="flex flex-col sm:flex-row gap-3" id="selection-row">
-                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-satellite-dish"></i> Host room
+                <button id="host-btn" onclick="startAsHost()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg shadow-cyan-950/30 transition-all duration-200 text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-satellite-dish"></i> Host Room
                 </button>
-                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-key"></i> Enter token
+                <button id="join-btn" onclick="startAsJoiner()" class="flex-1 bg-gray-800/80 hover:bg-gray-700 border border-gray-700/80 text-white font-extrabold py-3 px-4 rounded-xl transition-all duration-200 text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-link"></i> Enter Token
                 </button>
             </div>
             
             <div id="host-flow" class="hidden flex flex-col gap-3">
-                <div class="bg-darkBg p-3 rounded-lg border border-gray-800 relative">
-                    <label class="text-xs font-bold text-cyan-400 block mb-1">1. Copy this room code & send to your friend:</label>
-                    <textarea id="generated-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-400 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
-                    <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                <div class="bg-darkBg/60 p-3 rounded-xl border border-gray-800 relative">
+                    <label class="text-[10px] uppercase tracking-wider font-extrabold text-cyan-400 block mb-1">1. Copy this room code & send to your friend:</label>
+                    <textarea id="generated-token" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
+                    <button onclick="copyToken('generated-token')" class="absolute right-3 bottom-3 bg-gray-800 hover:bg-gray-700 text-gray-300 p-1.5 rounded-lg border border-gray-700 transition"><i class="fa-regular fa-copy text-xs"></i></button>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-gray-400 block mb-1">2. Paste friend's response token code below:</label>
-                    <textarea id="friend-response-token" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste response code text block here..."></textarea>
+                    <label class="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block mb-1">2. Paste friend's response token code below:</label>
+                    <textarea id="friend-response-token" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full h-16 bg-darkBg border border-gray-800 rounded-xl p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 resize-none shadow-inner" placeholder="Paste response token here..."></textarea>
                 </div>
-                <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Establish P2P Connection</button>
+                <button id="host-connect-btn" onclick="connectHost()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md">Establish Secure Connection</button>
             </div>
 
             <div id="joiner-flow" class="hidden flex flex-col gap-3">
                 <div>
-                    <label class="text-xs font-bold text-gray-400 block mb-1">1. Paste the Host's room code here:</label>
-                    <textarea id="host-token-input" class="w-full h-16 bg-darkBg border border-gray-800 rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 resize-none" placeholder="Paste incoming host code..."></textarea>
+                    <label class="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block mb-1">1. Paste the Host's room code here:</label>
+                    <textarea id="host-token-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full h-16 bg-darkBg border border-gray-800 rounded-xl p-2.5 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyan-400 resize-none shadow-inner" placeholder="Paste host room token here..."></textarea>
                 </div>
-                <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-md">Compile Response Code</button>
-                <div id="joiner-response-box" class="hidden bg-darkBg p-3 rounded-lg border border-gray-800 relative mt-2">
-                    <label class="text-xs font-bold text-cyan-400 block mb-1">2. Send this response code back to the Host:</label>
-                    <textarea id="generated-response-token" readonly class="w-full h-16 bg-transparent text-xs font-mono text-gray-400 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
-                    <button onclick="copyToken('generated-response-token')" class="absolute right-3 bottom-3 text-gray-400 hover:text-white transition"><i class="fa-regular fa-copy text-sm"></i></button>
+                <button id="joiner-generate-btn" onclick="generateJoinerResponse()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md">Compile Response Code</button>
+                <div id="joiner-response-box" class="hidden bg-darkBg/60 p-3 rounded-xl border border-gray-800 relative mt-2">
+                    <label class="text-[10px] uppercase tracking-wider font-extrabold text-cyan-400 block mb-1">2. Send this response code back to the Host:</label>
+                    <textarea id="generated-response-token" readonly autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" class="w-full h-16 bg-transparent text-xs font-mono text-gray-500 focus:outline-none resize-none pr-10 overflow-y-auto" onclick="this.select()"></textarea>
+                    <button onclick="copyToken('generated-response-token')" class="absolute right-3 bottom-3 bg-gray-800 hover:bg-gray-700 text-gray-300 p-1.5 rounded-lg border border-gray-700 transition"><i class="fa-regular fa-copy text-xs"></i></button>
                 </div>
             </div>
         </div>
 
-        <div id="utility-bar" class="hidden flex items-center justify-end bg-inputBg/40 border border-gray-800 p-2.5 rounded-xl shadow-inner">
-            <button onclick="exportEncryptedLog()" class="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
+        <div id="utility-bar" class="hidden flex items-center justify-end bg-inputBg/20 border border-gray-800/80 p-2 rounded-xl">
+            <button onclick="exportEncryptedLog()" class="bg-gray-800/50 hover:bg-gray-800 border border-gray-700/60 text-gray-300 text-xs font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-file-shield text-cyan-400"></i> Export Chat Log
             </button>
         </div>
 
         <div class="relative w-full">
-            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[340px] bg-darkBg border border-gray-800 rounded-xl overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
-                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
-                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
-                    Disconnected. Exchange manual codes above to open chat.
+            <div id="chat-box" onscroll="handleChatScroll()" class="w-full h-[360px] bg-darkBg border border-gray-900 rounded-2xl overflow-y-auto p-4 flex flex-col gap-3.5 scroll-smooth shadow-inner">
+                <div class="text-center text-xs text-gray-600 my-auto p-8" id="placeholder-text">
+                    <i class="fa-solid fa-shield-halved text-4xl block mb-3 opacity-25"></i>
+                    Disconnected. Complete the key token exchange above to activate your chat window.
                 </div>
             </div>
-            <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-xl flex items-center gap-2 z-10">
+            <button id="unread-badge" onclick="snapToBottom()" class="hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-white text-xs font-extrabold py-2 px-4 rounded-full shadow-xl flex items-center gap-2 z-10 hover:scale-105 active:scale-95 transition-all">
                 <i class="fa-solid fa-arrow-down animate-bounce"></i> New message below
             </button>
         </div>
         
-        <div class="flex gap-2 items-center w-full">
+        <div class="flex gap-2.5 items-center w-full">
             <input type="file" id="file-uploader" class="hidden" onchange="processFileUpload()">
-            <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800 border border-gray-800 text-gray-400 disabled:opacity-30 p-3.5 rounded-xl transition flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-paperclip text-sm"></i>
+            <button onclick="triggerFileSelect()" id="clip-btn" disabled class="bg-inputBg hover:bg-gray-800/80 border border-gray-800 text-gray-400 disabled:opacity-20 p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md">
+                <i class="fa-solid fa-paperclip text-base"></i>
             </button>
 
             <div class="flex-1 relative min-w-0 flex gap-2">
-                <input type="text" id="msg-input" placeholder="Disconnected..." disabled class="w-full bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-50 min-w-0">
-                <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-50 font-bold p-3.5 rounded-xl flex items-center justify-center transition shrink-0">
-                    <i class="fa-solid fa-paper-plane text-sm"></i>
+                <input type="text" id="msg-input" placeholder="Locks engaged..." disabled class="w-full bg-inputBg border border-gray-800/90 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3.5 focus:outline-none focus:border-cyan-400 disabled:opacity-40 min-w-0 shadow-inner transition-colors">
+                <button id="send-btn" onclick="sendMessage()" disabled class="bg-cyan-500 hover:bg-cyan-600 text-white disabled:opacity-30 font-bold p-3.5 rounded-xl flex items-center justify-center transition-all shrink-0 shadow-md">
+                    <i class="fa-solid fa-paper-plane text-base"></i>
                 </button>
             </div>
         </div>
 
-        <div class="border-t border-gray-800 pt-4 mt-1 flex flex-col gap-2">
-            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500"><i class="fa-solid fa-unlock-keyhole"></i> Quick File Decryption Log Viewer</span>
+        <div class="border-t border-gray-800/80 pt-4 mt-1 flex flex-col gap-2.5">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 flex items-center gap-1"><i class="fa-solid fa-unlock-keyhole text-gray-600"></i> Quick File Decryption Log Viewer</span>
             <div class="flex flex-col sm:flex-row gap-2">
-                <input type="file" id="decrypt-file-input" onchange="decryptUploadedLog()" class="bg-inputBg border border-gray-800 text-xs rounded-lg px-2.5 py-2 text-gray-400 w-full cursor-pointer">
+                <input type="file" id="decrypt-file-input" onchange="decryptUploadedLog()" class="bg-inputBg/50 border border-gray-800/80 text-xs rounded-xl px-3 py-2 text-gray-400 w-full cursor-pointer file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-gray-800 file:text-gray-300 file:hover:bg-gray-700">
             </div>
-            <textarea id="decrypted-output" readonly class="w-full h-28 bg-darkBg border border-gray-800 rounded-lg p-3 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden" placeholder="Decoded logs output..."></textarea>
+            <textarea id="decrypted-output" readonly class="w-full h-28 bg-darkBg border border-gray-800/80 rounded-xl p-3 text-xs font-mono text-emerald-400 focus:outline-none resize-none hidden shadow-inner" placeholder="Decoded logs output..."></textarea>
         </div>
     </div>
 
@@ -157,32 +182,105 @@
         const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; 
 
         const primaryColorMap = {
-            cyan: { main: 'bg-cyan-500', hover: 'hover:bg-cyan-600', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600' },
-            emerald: { main: 'bg-emerald-500', hover: 'hover:bg-emerald-600', text: 'text-emerald-400', border: 'focus:border-emerald-400', msg: 'bg-emerald-600' },
-            purple: { main: 'bg-purple-500', hover: 'hover:bg-purple-600', text: 'text-purple-400', border: 'focus:border-purple-400', msg: 'bg-purple-600' },
-            rose: { main: 'bg-rose-500', hover: 'hover:bg-rose-600', text: 'text-rose-400', border: 'focus:border-rose-400', msg: 'bg-rose-600' }
+            cyan: { main: 'from-cyan-500 to-blue-600', hover: 'hover:from-cyan-600 hover:to-blue-700', text: 'text-cyan-400', border: 'focus:border-cyan-400', msg: 'bg-cyan-600 text-white rounded-tr-none' },
+            emerald: { main: 'from-emerald-500 to-teal-600', hover: 'hover:from-emerald-600 hover:to-teal-700', text: 'text-emerald-400', border: 'focus:border-emerald-400', msg: 'bg-emerald-600 text-white rounded-tr-none' },
+            purple: { main: 'from-purple-500 to-indigo-600', hover: 'hover:from-purple-600 hover:to-indigo-700', text: 'text-purple-400', border: 'focus:border-purple-400', msg: 'bg-purple-600 text-white rounded-tr-none' },
+            rose: { main: 'from-rose-500 to-pink-600', hover: 'hover:from-rose-600 hover:to-pink-700', text: 'text-rose-400', border: 'focus:border-rose-400', msg: 'bg-rose-600 text-white rounded-tr-none' }
         };
+
+        // --- LOAD INITIAL BROWSER MEMORY PERSISTENCE ---
+        window.onload = function() {
+            // Restore Username
+            if(localStorage.getItem('xhin_alias')) {
+                document.getElementById('username-input').value = localStorage.getItem('xhin_alias');
+            }
+            // Restore Theme
+            if(localStorage.getItem('xhin_theme')) {
+                document.getElementById('theme-select').value = localStorage.getItem('xhin_theme');
+            }
+            changeTheme();
+
+            // Rehydrate Chat History Logs
+            if(localStorage.getItem('xhin_persist_logs')) {
+                internalLogMemory = JSON.parse(localStorage.getItem('xhin_persist_logs'));
+                if(internalLogMemory.length > 0) {
+                    if(document.getElementById('placeholder-text')) document.getElementById('placeholder-text').remove();
+                    
+                    internalLogMemory.forEach(logItem => {
+                        const parsed = parseHistoryString(logItem);
+                        if(parsed) {
+                            renderDOMBubble(parsed.text, parsed.type, parsed.user, parsed.time, parsed.isFile, parsed.fileData, parsed.fileName);
+                        }
+                    });
+                    snapToBottom();
+                }
+            }
+        };
+
+        function saveIdentityState() {
+            const val = document.getElementById('username-input').value.trim();
+            localStorage.setItem('xhin_alias', val || 'User_A');
+        }
+
+        function commitLogsToStorage(logString) {
+            internalLogMemory.push(logString);
+            localStorage.setItem('xhin_persist_logs', JSON.stringify(internalLogMemory));
+        }
+
+        function parseHistoryString(str) {
+            // Format format lookup structures: [TIME] ALIAS: text OR [TIME] ALIAS: [FILE: data_url | filename]
+            const match = str.match(/^\[(.*?)\] (.*?): (.*)$/);
+            if(!match) return null;
+            const time = match[1];
+            const user = match[2];
+            const content = match[3];
+            
+            const currentAlias = document.getElementById('username-input').value.trim() || 'User_A';
+            const type = (user === currentAlias) ? 'sent' : 'received';
+
+            if(content.startsWith('[FILE:')) {
+                const fileMatch = content.match(/^\[FILE: (.*?) \| (.*?)\]$/);
+                if(fileMatch) {
+                    return { time, user, type, isFile: true, fileData: fileMatch[1], fileName: fileMatch[2] };
+                }
+            }
+            return { time, user, type, isFile: false, text: content };
+        }
 
         function changeTheme() {
             const select = document.getElementById('theme-select');
             const newTheme = select.value;
+            localStorage.setItem('xhin_theme', newTheme);
+
             const oldConf = primaryColorMap[currentThemeColor];
             const newConf = primaryColorMap[newTheme];
 
-            document.querySelectorAll(`.${oldConf.main}`).forEach(el => {
-                el.classList.replace(oldConf.main, newConf.main);
-                if (el.classList.contains('hover:' + oldConf.main.split('-')[1])) el.classList.replace(oldConf.hover, newConf.hover);
+            // Update Gradient Action Buttons
+            document.querySelectorAll('.bg-gradient-to-r').forEach(el => {
+                if(el.classList.contains(oldConf.main)) {
+                    el.classList.remove(...oldConf.main.split(' '));
+                    el.classList.remove(...oldConf.hover.split(' '));
+                    el.classList.add(...newConf.main.split(' '));
+                    el.classList.add(...newConf.hover.split(' '));
+                }
             });
-            document.getElementById('theme-icon').className = `fa-solid fa-user-group ${newConf.text}`;
+
+            // Update Header brand labels
+            document.getElementById('brand-text').className = `bg-gradient-to-r ${newConf.main} bg-clip-text text-transparent text-2xl font-black tracking-tight`;
+            document.getElementById('status-dot').className = `w-2 h-2 rounded-full animate-pulse ${isTunnelOpen ? 'bg-emerald-400' : 'bg-amber-400'}`;
             document.getElementById('msg-input').classList.replace(oldConf.border, newConf.border);
-            document.getElementById('unread-badge').classList.replace(oldConf.main, newConf.main);
-            document.querySelectorAll('.sent-bubble').forEach(b => b.classList.replace(oldConf.msg, newConf.msg));
+            document.getElementById('unread-badge').classList.replace('bg-cyan-500', 'bg-' + newTheme + '-500');
+            
+            // Re-color existing active outbox nodes inside DOM viewports
+            document.querySelectorAll('.sent-bubble-node').forEach(b => {
+                b.className = `px-4 py-2.5 text-sm break-all leading-relaxed shadow-md sent-bubble-node ${newConf.msg}`;
+            });
             currentThemeColor = newTheme;
         }
 
         function formatMessageText(text) {
             let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            html = html.replace(/```([\s\S]+?)```/g, '<pre class="bg-black/40 text-gray-300 font-mono p-2 rounded-md my-1 text-xs border border-white/5 overflow-x-auto">$1</pre>');
+            html = html.replace(/```([\s\S]+?)```/g, '<pre class="bg-black/40 font-mono p-2 rounded-xl my-1 text-xs border border-white/5 overflow-x-auto text-gray-300">$1</pre>');
             html = html.replace(/`([^`]+?)`/g, '<code class="bg-black/30 font-mono text-cyan-300 px-1 py-0.5 rounded text-xs">$1</code>');
             html = html.replace(/\*\*([^*]+?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
             html = html.replace(/\*([^*]+?)\*/g, '<em class="italic">$1</em>');
@@ -219,17 +317,17 @@
 
             localConnection.onicecandidate = (e) => {
                 if (!e.candidate) {
-                    // Compress text content block string tightly
                     document.getElementById('generated-token').value = btoa(JSON.stringify(localConnection.localDescription));
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-cyan-400"></i> Code ready. Copy step 1!`;
+                    document.getElementById('status').innerHTML = `Code ready. Copy step 1!`;
                 }
             };
             await localConnection.setLocalDescription(await localConnection.createOffer());
         }
 
         async function connectHost() {
-            const raw = document.getElementById('friend-response-token').value.trim();
-            if(!raw) return alert("Please paste the response code first!");
+            let raw = document.getElementById('friend-response-token').value.trim();
+            raw = raw.replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/\s/g, '');
+            if(!raw) return alert("Please paste the response token code first!");
             try { 
                 document.getElementById('host-connect-btn').disabled = true;
                 await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw)))); 
@@ -246,7 +344,8 @@
         }
 
         async function generateJoinerResponse() {
-            const raw = document.getElementById('host-token-input').value.trim();
+            let raw = document.getElementById('host-token-input').value.trim();
+            raw = raw.replace(/[\u201c\u201d]/g, '"').replace(/[\u2018\u2019]/g, "'").replace(/\s/g, '');
             if(!raw) return alert("Please paste the host's room code first!");
             try {
                 document.getElementById('joiner-generate-btn').disabled = true;
@@ -258,7 +357,7 @@
                     if (!e.candidate) {
                         document.getElementById('generated-response-token').value = btoa(JSON.stringify(localConnection.localDescription));
                         document.getElementById('joiner-response-box').classList.remove('hidden');
-                        document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Response compiled! Copy step 2.`;
+                        document.getElementById('status').innerHTML = `Response compiled! Copy step 2.`;
                     }
                 };
                 await localConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(raw))));
@@ -283,13 +382,14 @@
             if(!isTunnelOpen) return;
             isTunnelOpen = false;
             
-            document.getElementById('status').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1"></i> User disconnected`;
-            document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-1";
+            document.getElementById('status').innerText = "User disconnected";
+            document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-0.5";
+            document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-rose-500";
             
             const box = document.getElementById('chat-box');
             const alertDiv = document.createElement('div');
-            alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-500 bg-rose-950/30 border border-rose-900/50 py-2 rounded-xl px-4";
-            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Connection broken: Peer disconnected.`;
+            alertDiv.className = "w-full text-center my-2 text-xs font-bold text-rose-400 bg-rose-950/20 border border-rose-900/40 py-2.5 rounded-xl px-4 shadow-sm";
+            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Connection dropped: Peer left session channel.`;
             box.appendChild(alertDiv);
             snapToBottom();
 
@@ -299,16 +399,16 @@
             document.getElementById('clip-btn').disabled = true;
         }
 
-        // --- DATA TUNNEL HIGHWAY ROUTINES ---
         function setupDataChannelEvents() {
             dataChannel.onopen = () => {
                 isTunnelOpen = true;
                 const myAlias = document.getElementById('username-input').value.trim() || 'User_A';
-                
                 dataChannel.send(JSON.stringify({ type: 'handshake-identity', sender: myAlias }));
 
-                document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Connected`;
-                document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-1";
+                document.getElementById('status').innerText = "Connected";
+                document.getElementById('status').className = "text-xs text-emerald-400 font-bold mt-0.5";
+                document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+                
                 document.getElementById('setup-panel').classList.add('hidden');
                 document.getElementById('utility-bar').classList.remove('hidden');
                 
@@ -321,19 +421,18 @@
 
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
-                
                 if(p.type === 'handshake-identity') {
-                    document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> ${p.sender} is connected`;
+                    document.getElementById('status').innerText = `${p.sender} is connected`;
                     return;
                 }
-
-                playPing();
+                
+                playIncomingSound(); // Trigger crisp alert audio chime
                 if(p.type === 'file') {
                     displayFileBubble(p.fileData, p.fileName, 'received', p.sender, p.time);
-                    internalLogMemory.push(`[${p.time}] ${p.sender}: [Shared File: ${p.fileName}]`);
+                    commitLogsToStorage(`[${p.time}] ${p.sender}: [FILE: ${p.fileData} | ${p.fileName}]`);
                 } else {
                     displayMessage(p.text, 'received', p.sender, p.time);
-                    internalLogMemory.push(`[${p.time}] ${p.sender}: ${p.text}`);
+                    commitLogsToStorage(`[${p.time}] ${p.sender}: ${p.text}`);
                 }
                 if(isUserScrolledUp) document.getElementById('unread-badge').classList.remove('hidden');
                 else snapToBottom();
@@ -342,6 +441,7 @@
             dataChannel.onclose = () => { handlePeerDisconnectEvent(); };
         }
 
+        // --- OUTBOUND MESSAGE PROCESSING SHUTTLES ---
         function sendMessage() {
             const input = document.getElementById('msg-input');
             const txt = input.value.trim();
@@ -350,9 +450,10 @@
             const name = document.getElementById('username-input').value.trim() || 'User_A';
             const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+            playOutgoingSound(); // Instant outbox click audio chime feedback logic triggered
             dataChannel.send(JSON.stringify({ type: 'text', text: txt, sender: name, time: stamp }));
             displayMessage(txt, 'sent', name, stamp);
-            internalLogMemory.push(`[${stamp}] ${name}: ${txt}`);
+            commitLogsToStorage(`[${stamp}] ${name}: ${txt}`);
             input.value = '';
             snapToBottom();
         }
@@ -368,9 +469,11 @@
             r.onload = function(ev) {
                 const name = document.getElementById('username-input').value.trim() || 'User_A';
                 const stamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                playOutgoingSound();
                 dataChannel.send(JSON.stringify({ type: 'file', fileData: ev.target.result, fileName: f.name, sender: name, time: stamp }));
                 displayFileBubble(ev.target.result, f.name, 'sent', name, stamp);
-                internalLogMemory.push(`[${stamp}] ${name}: [Shared File: ${f.name}]`);
+                commitLogsToStorage(`[${stamp}] ${name}: [FILE: ${ev.target.result} | ${f.name}]`);
                 document.getElementById('file-uploader').value = '';
                 snapToBottom();
             };
@@ -378,14 +481,17 @@
         }
 
         function resetTerminalState() {
+            // Hard Flush memory cache layer registers clean
+            localStorage.removeItem('xhin_persist_logs');
             if(dataChannel) { dataChannel.close(); dataChannel = null; }
             if(localConnection) { localConnection.close(); localConnection = null; }
 
             isTunnelOpen = false;
             internalLogMemory = [];
 
-            document.getElementById('status').innerHTML = `<i class="fa-solid fa-circle-dot animate-pulse mr-1 text-amber-400"></i> Awaiting connection...`;
-            document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-1";
+            document.getElementById('status').innerText = "Awaiting connection...";
+            document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-0.5";
+            document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
             
             document.getElementById('setup-panel').classList.remove('hidden');
             document.getElementById('selection-row').classList.remove('hidden');
@@ -406,42 +512,54 @@
 
             const box = document.getElementById('chat-box');
             box.innerHTML = `
-                <div class="text-center text-xs text-gray-600 my-auto" id="placeholder-text">
-                    <i class="fa-solid fa-link-slash text-4xl block mb-2 opacity-25"></i>
+                <div class="text-center text-xs text-gray-600 my-auto p-8" id="placeholder-text">
+                    <i class="fa-solid fa-shield-halved text-4xl block mb-3 opacity-25"></i>
                     Disconnected. Exchange manual codes above to open chat.
                 </div>`;
 
             document.getElementById('msg-input').disabled = true;
-            document.getElementById('msg-input').placeholder = "Disconnected...";
+            document.getElementById('msg-input').placeholder = "Locks engaged...";
             document.getElementById('send-btn').disabled = true;
             document.getElementById('clip-btn').disabled = true;
         }
 
-        // --- DRAW FUNCTIONS ---
+        // --- CORE UI GENERATOR RENDERERS ---
         function displayMessage(text, type, user, time) {
-            const box = document.getElementById('chat-box'); const div = document.createElement('div');
-            div.className = `flex flex-col w-full max-w-[78%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
-            const activeColor = primaryColorMap[currentThemeColor];
-            const style = type === 'sent' ? `${activeColor.main} text-white rounded-2xl rounded-tr-none sent-bubble shadow-md` : `bg-gray-800/90 text-gray-200 rounded-2xl rounded-tl-none border border-gray-700/30`;
-
-            div.innerHTML = `<span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span><div class="px-4 py-2 text-sm break-all leading-relaxed ${style}">${formatMessageText(text)}</div><span class="text-[9px] text-gray-600 font-medium mt-0.5">${time}</span>`;
-            box.appendChild(div);
+            renderDOMBubble(text, type, user, time, false);
         }
 
         function displayFileBubble(data, name, type, user, time) {
+            renderDOMBubble(null, type, user, time, true, data, name);
+        }
+
+        function renderDOMBubble(text, type, user, time, isFile = false, fileData = null, fileName = null) {
+            if(document.getElementById('placeholder-text')) document.getElementById('placeholder-text').remove();
+            
             const box = document.getElementById('chat-box'); const div = document.createElement('div');
-            div.className = `flex flex-col w-full max-w-[75%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
+            div.className = `flex flex-col w-full max-w-[82%] gap-0.5 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
+            
             const activeColor = primaryColorMap[currentThemeColor];
-            const style = type === 'sent' ? `${activeColor.main} text-white rounded-xl sent-bubble` : `bg-gray-800 text-gray-200 rounded-xl border border-gray-700/40`;
+            
+            let bubbleStyle = "";
+            if(type === 'sent') {
+                bubbleStyle = `sent-bubble-node ${activeColor.msg}`;
+            } else {
+                bubbleStyle = `bg-bubblePeer text-gray-100 rounded-2xl rounded-tl-none border border-gray-800/40`;
+            }
 
-            let body = data.startsWith('data:image/') ? `<img src="${data}" class="max-w-full rounded-lg max-h-40 mb-2 border border-black/20 object-cover">` : '';
-            body += `<a href="${data}" download="${name}" class="inline-flex items-center gap-1.5 bg-black/20 hover:bg-black/40 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/5 transition break-all shadow-sm"><i class="fa-solid fa-circle-down text-cyan-300"></i> Download File</a>`;
+            let bubbleContent = "";
+            if(isFile) {
+                let imgPreview = fileData.startsWith('data:image/') ? `<img src="${fileData}" class="max-w-full rounded-xl max-h-40 mb-2 border border-black/30 object-cover shadow-sm">` : '';
+                bubbleContent = `<div class="p-2.5 rounded-2xl shadow-md ${bubbleStyle}">${imgPreview}<a href="${fileData}" download="${fileName}" class="inline-flex items-center gap-1.5 bg-black/25 hover:bg-black/40 text-white font-extrabold text-[11px] px-3 py-2 rounded-xl border border-white/5 transition break-all shadow-sm"><i class="fa-solid fa-circle-down ${activeColor.text}"></i> Download File</a></div>`;
+            } else {
+                bubbleContent = `<div class="px-4 py-2.5 text-sm break-all leading-relaxed shadow-md rounded-2xl ${bubbleStyle}">${formatMessageText(text)}</div>`;
+            }
 
-            div.innerHTML = `<span class="text-[10px] text-gray-500 font-bold tracking-wide">${user}</span><div class="p-2.5 shadow-sm ${style}">${body}</div><span class="text-[9px] text-gray-600 font-medium">${time}</span>`;
+            div.innerHTML = `<span class="text-[10px] text-gray-500 font-extrabold tracking-wide px-1">${user}</span>${bubbleContent}<span class="text-[9px] text-gray-600 font-semibold px-1 mt-0.5 tracking-tight">${time}</span>`;
             box.appendChild(div);
         }
 
-        // --- TRANSCRIPT HANDLING ---
+        // --- AUTOMATED CRYTOGRAPHY BACKUPS & RESTORES ---
         function exportEncryptedLog() {
             if(internalLogMemory.length === 0) return alert("No history logged yet!");
             const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
@@ -465,7 +583,8 @@
 
                     if (!originalText) throw new Error();
 
-                    outputBox.value = originalText;
+                    // Clean raw logs format matching preview visibility layouts cleanly
+                    outputBox.value = originalText.replace(/\[FILE:.*?\|(.*?)\]/g, '[Shared File: $1]');
                     outputBox.classList.remove('hidden');
                 } catch (err) {
                     alert("This file is corrupted or not a valid Xhinchat log backup!");
@@ -477,9 +596,16 @@
 
         function copyToken(id) { 
             const textarea = document.getElementById(id);
-            textarea.select();
-            navigator.clipboard.writeText(textarea.value); 
-            alert("Code text copied to clipboard!"); 
+            textarea.focus(); textarea.setSelectionRange(0, 99999);
+            try {
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    alert("Code token added to clipboard!");
+                }).catch(() => {
+                    document.execCommand('copy'); alert("Code copied to clipboard!");
+                });
+            } catch (err) {
+                document.execCommand('copy'); alert("Code copied to clipboard!");
+            }
         }
         document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
