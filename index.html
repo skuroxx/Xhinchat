@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Xhinchat // Premium P2P Terminal</title>
+    <title>Xhinchat</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -200,6 +200,10 @@
         let remotePeerAlias = 'Peer';
         let typingTimeoutReference = null;
         
+        // HEARTBEAT PATTERN SYSTEM VARIABLES
+        let heartbeatInterval = null;
+        let missedPingsCount = 0;
+        
         const peerConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
         const FIXED_INTERNAL_KEY = "Xhinchat_Autokey_Signature_2026"; 
 
@@ -286,7 +290,6 @@
             localStorage.setItem('xhin_theme', newTheme);
             const oldConf = primaryColorMap[currentThemeColor];
             const newConf = primaryColorMap[newTheme];
-
             document.querySelectorAll('.bg-gradient-to-r').forEach(el => {
                 if(el.classList.contains(oldConf.main)) {
                     el.classList.remove(...oldConf.main.split(' ')); el.classList.add(...newConf.main.split(' '));
@@ -295,7 +298,7 @@
             document.getElementById('brand-text').className = `bg-gradient-to-r ${newConf.main} bg-clip-text text-transparent text-2xl font-black tracking-tight`;
             document.getElementById('status-dot').className = `w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${isTunnelOpen ? 'text-emerald-400 bg-emerald-400' : 'text-amber-400 bg-amber-400 animate-pulse'}`;
             document.getElementById('msg-input').className = `w-full bg-inputBg border border-gray-800 text-sm text-white placeholder-gray-600 rounded-xl px-4 py-3 focus:outline-none ${newConf.border} disabled:opacity-44 min-w-0 shadow-inner transition-all`;
-            document.getElementById('unread-badge').classList.replace('bg-cyan-500', 'bg-' + newTheme + '-500');
+            document.getElementById('unread-badge').className = `hidden absolute bottom-4 left-1/2 -translate-x-1/2 bg-${newTheme}-500 text-white text-[11px] font-extrabold py-1.5 px-3 rounded-full shadow-lg flex items-center gap-1.5 z-10 hover:scale-105 active:scale-95 transition-all`;
             document.querySelectorAll('.sent-bubble-node').forEach(b => b.className = `px-4 py-2.5 text-xs break-all leading-relaxed shadow-md sent-bubble-node ${newConf.msg}`);
             currentThemeColor = newTheme;
         }
@@ -335,7 +338,7 @@
             document.getElementById('host-btn').disabled = true; document.getElementById('join-btn').disabled = true;
         }
 
-        // --- PROTOCOL CONTROLLERS ---
+        // --- PROTOCOL HANDSHAKES ---
         async function startAsHost() {
             lockSetupButtons(); localStorage.setItem('xhin_rtc_role', 'host');
             document.getElementById('selection-row').classList.add('hidden');
@@ -401,14 +404,16 @@
 
         function setupConnectionMonitoring() {
             localConnection.onconnectionstatechange = () => {
-                if(localConnection.connectionState === "disconnected" || localConnection.connectionState === "failed" || localConnection.connectionState === "closed") {
-                    handlePeerDisconnectEvent();
-                }
+                // Completely ignore standard unstable connection state warnings now! 
+                // We rely 100% on the verified background heartbeat logic system below instead.
             };
         }
 
-        function handlePeerDisconnectEvent() {
-            if(!isTunnelOpen) return; isTunnelOpen = false;
+        // True Disconnect Sequence Trigger Function
+        function triggerTrueDisconnectSequence() {
+            if(!isTunnelOpen) return;
+            isTunnelOpen = false;
+            clearInterval(heartbeatInterval);
             
             document.getElementById('status').innerText = "User disconnected";
             document.getElementById('status').className = "text-xs text-rose-500 font-bold mt-0.5";
@@ -417,13 +422,34 @@
             const box = document.getElementById('chat-box');
             const alertDiv = document.createElement('div');
             alertDiv.className = "w-full text-center my-2 text-[11px] font-bold text-rose-400 bg-rose-950/20 border border-rose-900/40 py-2 rounded-xl px-4 shadow-sm";
-            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Connection lost: ${remotePeerAlias} left the chat.`;
+            alertDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Connection lost: ${remotePeerAlias} disconnected.`;
             box.appendChild(alertDiv); snapToBottom();
 
             document.getElementById('msg-input').disabled = true;
             document.getElementById('msg-input').placeholder = "User disconnected...";
             document.getElementById('send-btn').disabled = true;
             document.getElementById('clip-btn').disabled = true;
+        }
+
+        // --- HEARTBEAT TIMEOUT LOOP ENGINE ---
+        function startHeartbeatLoop() {
+            clearInterval(heartbeatInterval);
+            missedPingsCount = 0;
+
+            heartbeatInterval = setInterval(() => {
+                if (dataChannel && dataChannel.readyState === "open") {
+                    missedPingsCount++;
+                    
+                    // If 3 consecutive heartbeats are missed, trigger a complete disconnection breakdown
+                    if (missedPingsCount >= 3) {
+                        triggerTrueDisconnectSequence();
+                        return;
+                    }
+                    
+                    // Send a standard silent ping payload out on line
+                    dataChannel.send(JSON.stringify({ type: 'internal-ping' }));
+                }
+            }, 3000); // 3-second checks
         }
 
         function setupDataChannelEvents() {
@@ -444,10 +470,24 @@
                 document.getElementById('msg-input').placeholder = "Write a message...";
                 document.getElementById('send-btn').disabled = false;
                 document.getElementById('clip-btn').disabled = false;
+                
+                startHeartbeatLoop(); // Initialize the background heartbeat loop
             };
 
             dataChannel.onmessage = (e) => {
                 const p = JSON.parse(e.data);
+                
+                // BACKEND SILENT KEEPALIVE INTERCHANGES
+                if(p.type === 'internal-ping') {
+                    missedPingsCount = 0; // Reset counter instantly
+                    dataChannel.send(JSON.stringify({ type: 'internal-pong' }));
+                    return;
+                }
+                if(p.type === 'internal-pong') {
+                    missedPingsCount = 0; // Connection verified active
+                    return;
+                }
+
                 if(p.type === 'handshake-identity') {
                     remotePeerAlias = p.sender;
                     document.getElementById('status').innerText = `${p.sender} is connected`;
@@ -488,7 +528,7 @@
                 else snapToBottom();
             };
 
-            dataChannel.onclose = () => { handlePeerDisconnectEvent(); };
+            dataChannel.onclose = () => { triggerTrueDisconnectSequence(); };
         }
 
         function sendMessage() {
@@ -541,6 +581,7 @@
         }
 
         function resetTerminalState() {
+            clearInterval(heartbeatInterval);
             localStorage.removeItem('xhin_persist_logs');
             localStorage.removeItem('xhin_rtc_local_desc');
             localStorage.removeItem('xhin_rtc_remote_desc');
@@ -553,7 +594,7 @@
             document.getElementById('status').innerText = "Awaiting connection...";
             document.getElementById('status').className = "text-xs text-amber-400 font-medium mt-0.5";
             document.getElementById('status-dot').className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#fbbf24]";
-            document.getElementById('typing-hud').classList.replace('hidden', 'flex');
+            document.getElementById('typing-hud').classList.replace('flex', 'hidden');
             
             document.getElementById('setup-panel').classList.remove('hidden');
             document.getElementById('selection-row').classList.remove('hidden');
@@ -594,8 +635,6 @@
             div.className = `flex flex-col w-full max-w-[85%] gap-0.5 shrink-0 ${type === 'sent' ? 'self-end items-end' : 'self-start items-start'}`;
             
             const activeColor = primaryColorMap[currentThemeColor];
-            let bubbleStyle = (type === 'sent') ? `sent-bubble-node ${activeColor.msg}` : `bg-bubblePeer text-gray-100 rounded-2xl rounded-tl-none border border-gray-800/40`;
-
             let bubbleContent = "";
             if(isFile) {
                 let preview = fileData.startsWith('data:image/') ? `<img src="${fileData}" class="max-w-full rounded-xl max-h-36 mb-1.5 object-cover shadow-sm">` : '';
@@ -607,7 +646,7 @@
             let receiptLine = "";
             if(type === 'sent') {
                 receiptLine = isRehydrated 
-                    ? `<span class="text-[9px] text-gray-600 font-semibold" id="tick-${id}"><i class="fa-solid fa-check-double"></i> Archived</span>`
+                    ? `<span class="text-[9px] text-gray-600 font-semibold" id="tick-${id}"><i class="fa-solid fa-check-double"></i> Seen</span>`
                     : `<span class="text-[9px] text-gray-600 font-semibold" id="tick-${id}"><i class="fa-solid fa-check text-gray-500"></i> Delivered</span>`;
             }
 
@@ -652,3 +691,5 @@
     </script>
 </body>
 </html>
+
+     
