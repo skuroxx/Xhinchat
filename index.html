@@ -616,4 +616,39 @@
         }
 
         function exportEncryptedLog() {
-            if(internalLogMemory.length === 0) return alert(
+            if(internalLogMemory.length === 0) return alert("No logs recorded!");
+            const encryptedString = CryptoJS.AES.encrypt(internalLogMemory.join('\n'), FIXED_INTERNAL_KEY).toString();
+            const element = document.createElement('a');
+            element.href = URL.createObjectURL(new Blob([encryptedString], {type: 'text/plain'}));
+            element.download = `xhinchat_history_${new Date().toISOString().slice(0,10)}.enc`;
+            document.body.appendChild(element); element.click(); document.body.removeChild(element);
+        }
+
+        function decryptUploadedLog() {
+            const fileInput = document.getElementById('decrypt-file-input').files[0];
+            const outputBox = document.getElementById('decrypted-output'); if (!fileInput) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const originalText = CryptoJS.AES.decrypt(e.target.result, FIXED_INTERNAL_KEY).toString(CryptoJS.enc.Utf8);
+                    if (!originalText) throw new Error();
+                    outputBox.value = originalText.replace(/\(msg-.*?\)/g, '').replace(/\[FILE:.*?\|(.*?)\]/g, '[Shared File: $1]');
+                    outputBox.classList.remove('hidden');
+                } catch (err) { alert("Invalid log backup data file!"); outputBox.classList.add('hidden'); }
+            };
+            reader.readAsText(fileInput);
+        }
+
+        function copyToken(id) { 
+            const textarea = document.getElementById(id); textarea.focus(); textarea.setSelectionRange(0, 99999);
+            try {
+                navigator.clipboard.writeText(textarea.value).then(() => alert("Token copied!")).catch(() => {
+                    document.execCommand('copy'); alert("Token copied!");
+                });
+            } catch (err) { document.execCommand('copy'); alert("Token copied!"); }
+        }
+        document.getElementById('msg-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
